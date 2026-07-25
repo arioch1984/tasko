@@ -1,0 +1,10 @@
+---
+description: English is the primary language for Tasko UI and docs
+alwaysApply: true
+---
+
+# English primary language
+
+- User-facing strings, README, CHANGELOG, commit messages, and release notes are **English**.
+- Put new copy in `lib/core/l10n/app_strings.dart` (`AppStrings`), not scattered literals, so ARB / flutter_localizations can replace the class later.
+- Do not add Italian (or other) UI copy until a real i18n pass is planned.

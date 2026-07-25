@@ -1,0 +1,31 @@
+---
+description: Version bump, changelog, and git tag required for every main release
+alwaysApply: true
+---
+
+# Release versioning (main)
+
+English is the primary language for UI, README, changelog, commits, and release notes. Keep the `AppStrings` door open for future i18n; do not hardcode a second language yet.
+
+## Branches
+
+- Day-to-day work happens on `develop`.
+- `main` is release-only. Do not land feature commits on `main` without a version.
+
+## Every change that merges/commits to `main` MUST
+
+1. **Bump version** in `pubspec.yaml` (`version: X.Y.Z+BUILD`) using semver.
+2. **Sync** `AppConstants.version` and `AppConstants.buildNumber` with that version.
+3. **Update** `CHANGELOG.md`: move items from `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section (Added / Changed / Fixed / Removed as needed).
+4. **Tag** the release commit with an annotated tag: `vX.Y.Z` (message summarizes the release).
+5. **Distribute** via GitHub Releases: create a release for `vX.Y.Z`, paste the changelog section, attach `tasko-X.Y.Z.apk`. The in-app version string must match the release.
+
+## Do not
+
+- Commit to `main` without a version bump + changelog + tag.
+- Publish an APK whose filename or Release title does not match `pubspec` / `AppConstants`.
+- Leave Italian (or other) user-facing copy in new UI — English only until i18n lands.
+
+## Develop commits
+
+Commits on `develop` do not require a version bump or tag. Keep changelog under `[Unreleased]` when noting user-visible work that will ship later.
