@@ -1,7 +1,7 @@
 name: tasko
 description: Improved Google Tasks interface with labels, priority, and Tasko the badger.
 publish_to: "none"
-version: 0.1.0+1
+version: 0.1.1+2
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -29,3 +29,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mascot/
+    - assets/icon/

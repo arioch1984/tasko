@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-26
+
+### Added
+
+- App launcher icon featuring Tasko the badger (adaptive icon on Android)
+
+### Changed
+
+- README Downloads links point to `arioch1984/tasko`
+- Developer setup docs: Android-first run target, optional Web OAuth, debug SHA-1 with JDK
+
 ## [0.1.0] - 2026-07-26
 
 ### Added
@@ -22,5 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/OWNER/Tasko/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/OWNER/Tasko/releases/tag/v0.1.0
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/arioch1984/tasko/releases/tag/v0.1.1
+[0.1.0]: https://github.com/arioch1984/tasko/releases/tag/v0.1.0
