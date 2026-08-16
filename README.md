@@ -113,10 +113,13 @@ Add a Google account on the emulator/device before signing in to Tasko.
 
 ## Versioning & branches
 
-| Branch    | Role                                      |
-|-----------|-------------------------------------------|
-| `main`    | Release lineage only (versioned + tagged) |
-| `develop` | Day-to-day development                    |
+| Branch | Role |
+|--------|------|
+| `main` | Release lineage only (versioned + tagged) |
+| `develop` | Integration branch for day-to-day work (merge via PR after review) |
+| `feature/*`, `fix/*`, `hotfix/*` | All new work. Never commit directly to `main` or `develop`. |
+
+Agent tasks follow `.cursor/rules/agent-collaboration.mdc`: plan first (questions + implementation description), wait for approval, then implement on a dedicated branch.
 
 Every commit that lands on `main` must:
 
