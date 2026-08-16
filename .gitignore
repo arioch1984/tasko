@@ -10,6 +10,7 @@ build/
 .flutter-plugins
 .flutter-plugins-dependencies
 .metadata
+.config/
 
 # IDE
 .idea/
