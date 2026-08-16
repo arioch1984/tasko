@@ -9,8 +9,9 @@ English is the primary language for UI, README, changelog, commits, and release 
 
 ## Branches
 
-- Day-to-day work happens on `develop`.
-- `main` is release-only. Do not land feature commits on `main` without a version.
+- Features, bug fixes, and hotfixes start on a dedicated branch (see `agent-collaboration.mdc`). Never commit directly to `main` or `develop`.
+- Day-to-day work merges to `develop` only after review/approval.
+- `main` is release-only. Do not land feature commits on `main` without a version and an explicit release approval.
 
 ## Every change that merges/commits to `main` MUST
 
