@@ -234,6 +234,7 @@ def main() -> None:
         help="pubspec.yaml text from main. Default: git show origin/main:pubspec.yaml",
     )
     parser.add_argument("--github-output", type=Path)
+    parser.add_argument("--body-file", type=Path)
     parser.add_argument("--today", help="YYYY-MM-DD override for tests")
     args = parser.parse_args()
     base_pubspec = args.base_pubspec
@@ -253,6 +254,8 @@ def main() -> None:
             print(f"{key}={value}")
     if args.github_output:
         write_github_output(args.github_output, result)
+    if args.body_file and result.get("body"):
+        args.body_file.write_text(result["body"], encoding="utf-8")
     if result.get("skip") == "true":
         sys.exit(0)
 

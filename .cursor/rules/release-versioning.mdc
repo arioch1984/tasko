@@ -20,6 +20,8 @@ English is the primary language for UI, README, changelog, commits, and release 
 3. Fabio merges that PR into `main`.
 4. `release.yml` tags `vX.Y.Z`, builds the signed APK, and creates the GitHub Release (`tasko-X.Y.Z.apk`). Then it merges `main` back into `develop` so versions stay aligned.
 
+The Actions token must be allowed to open PRs: repo **Settings → Actions → General → Workflow permissions** → Read and write, and **Allow GitHub Actions to create and approve pull requests**.
+
 Added/Removed items in `[Unreleased]` bump **minor**; only Changed/Fixed bump **patch**. Build number always increases by 1 versus `main`.
 
 ## Every change that merges/commits to `main` MUST
