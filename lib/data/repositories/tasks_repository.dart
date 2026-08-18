@@ -129,11 +129,17 @@ class TasksRepository {
   Future<TaskItem> toggleCompleted(TaskItem task) {
     return updateTask(
       task.copyWith(
-        status: task.isCompleted
-            ? TaskStatus.needsAction
-            : TaskStatus.completed,
+        status:
+            task.isCompleted ? TaskStatus.needsAction : TaskStatus.completed,
       ),
     );
+  }
+
+  Future<void> rescheduleTasks(List<TaskItem> tasks, DateTime dueDate) async {
+    final due = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    for (final task in tasks) {
+      await updateTask(task.copyWith(dueDate: due));
+    }
   }
 
   Future<void> ensureMetaList() async {

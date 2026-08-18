@@ -5,6 +5,7 @@ import 'package:tasko/auth/auth_provider.dart';
 import 'package:tasko/features/auth/sign_in_screen.dart';
 import 'package:tasko/features/home/home_shell.dart';
 import 'package:tasko/features/labels/labels_screen.dart';
+import 'package:tasko/features/settings/settings_screen.dart';
 import 'package:tasko/features/tasks/task_detail_screen.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
@@ -35,6 +36,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/labels',
         builder: (context, state) => const LabelsScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/task/:listId/:taskId',

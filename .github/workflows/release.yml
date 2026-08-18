@@ -4,9 +4,12 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   android:
@@ -15,42 +18,78 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Read version from tag
+      - name: Read version
         id: meta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Tag $TAG is not a vX.Y.Z version tag"
-            exit 1
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#v}"
+            if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Tag $TAG is not a vX.Y.Z version tag"
+              exit 1
+            fi
+            PUBSPEC="$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+            if [[ "$PUBSPEC" != "$VERSION" ]]; then
+              echo "pubspec.yaml version $PUBSPEC does not match tag $VERSION"
+              exit 1
+            fi
+          else
+            VERSION="$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+            TAG="v${VERSION}"
           fi
-          PUBSPEC="$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
-          if [[ "$PUBSPEC" != "$VERSION" ]]; then
-            echo "pubspec.yaml version $PUBSPEC does not match tag $VERSION"
-            exit 1
+          EXISTS=false
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            EXISTS=true
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "apk=tasko-${VERSION}.apk" >> "$GITHUB_OUTPUT"
+          echo "exists=$EXISTS" >> "$GITHUB_OUTPUT"
+
+      - name: Already published
+        if: steps.meta.outputs.exists == 'true'
+        run: echo "GitHub Release ${{ steps.meta.outputs.tag }} already exists; skipping."
+
+      - name: Tag main if needed
+        if: steps.meta.outputs.exists != 'true' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.meta.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally"
+          else
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi
 
       - name: Set up Java
+        if: steps.meta.outputs.exists != 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Flutter
+        if: steps.meta.outputs.exists != 'true'
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
       - name: Accept Android licenses
+        if: steps.meta.outputs.exists != 'true'
         run: yes | flutter doctor --android-licenses >/dev/null 2>&1 || true
 
       - name: Decode release keystore
+        if: steps.meta.outputs.exists != 'true'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
@@ -63,12 +102,15 @@ jobs:
           test -s android/app/keystore.jks
 
       - name: Install dependencies
+        if: steps.meta.outputs.exists != 'true'
         run: flutter pub get
 
       - name: Test
+        if: steps.meta.outputs.exists != 'true'
         run: flutter test
 
       - name: Build signed release APK
+        if: steps.meta.outputs.exists != 'true'
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/keystore.jks
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -83,6 +125,7 @@ jobs:
           flutter build apk --release
 
       - name: Package APK and notes
+        if: steps.meta.outputs.exists != 'true'
         run: |
           set -euo pipefail
           VERSION="${{ steps.meta.outputs.version }}"
@@ -94,6 +137,7 @@ jobs:
           python3 .github/scripts/apk_signing_cert.py "$APK"
 
       - name: Publish GitHub Release
+        if: steps.meta.outputs.exists != 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -101,3 +145,28 @@ jobs:
           gh release create "${{ steps.meta.outputs.tag }}" "${{ steps.meta.outputs.apk }}" \
             --title "${{ steps.meta.outputs.tag }}" \
             --notes-file release-notes.md
+
+      - name: Sync main back into develop
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin develop
+          git checkout develop
+          if git merge origin/main -m "Sync ${TAG} into develop."; then
+            git push origin develop
+          else
+            git merge --abort || true
+            BRANCH="sync/${TAG}"
+            git checkout -B "$BRANCH" origin/main
+            git push -u origin "$BRANCH" --force
+            EXISTING="$(gh pr list --base develop --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+            if [[ -z "$EXISTING" ]]; then
+              gh pr create --base develop --head "$BRANCH" --title "Sync ${TAG} into develop" \
+                --body "Bring the ${TAG} version bump and changelog back onto \`develop\` after the GitHub Release."
+            fi
+          fi
