@@ -9,9 +9,18 @@ English is the primary language for UI, README, changelog, commits, and release 
 
 ## Branches
 
-- Features, bug fixes, and hotfixes start on a dedicated branch (see `agent-collaboration.mdc`). Never commit directly to `main` or `develop`.
+- Features, bug fixes, and hotfixes start on a dedicated branch (see `agent-collaboration.mdc`) and PR into `develop`. Never commit directly to `main` or `develop`.
 - Day-to-day work merges to `develop` only after review/approval.
-- `main` is release-only. Do not land feature commits on `main` without a version and an explicit release approval.
+- `main` is release-only. Agents do not open PRs to `main`. GitHub Actions opens the release PR when `develop` moves.
+
+## Automatic publish path
+
+1. Merge a feature/fix PR into `develop`.
+2. `prepare-release-pr.yml` opens or updates `release/vX.Y.Z` → `main` (semver bump from `[Unreleased]`, `pubspec.yaml`, `AppConstants`, changelog).
+3. Fabio merges that PR into `main`.
+4. `release.yml` tags `vX.Y.Z`, builds the signed APK, and creates the GitHub Release (`tasko-X.Y.Z.apk`). Then it merges `main` back into `develop` so versions stay aligned.
+
+Added/Removed items in `[Unreleased]` bump **minor**; only Changed/Fixed bump **patch**. Build number always increases by 1 versus `main`.
 
 ## Every change that merges/commits to `main` MUST
 
@@ -21,12 +30,15 @@ English is the primary language for UI, README, changelog, commits, and release 
 4. **Tag** the release commit with an annotated tag: `vX.Y.Z` (message summarizes the release) and **push the tag**.
 5. **Distribute** via GitHub Releases: `.github/workflows/release.yml` builds the signed APK and creates the release for `vX.Y.Z` with `tasko-X.Y.Z.apk` and the changelog section. The in-app version string must match the tag. Do not upload a manually built APK unless Actions is unavailable.
 
+The prepare-release workflow performs 1–3. Merging into `main` performs 4–5.
+
 ## Do not
 
 - Commit to `main` without a version bump + changelog + tag.
 - Publish an APK whose filename or Release title does not match `pubspec` / `AppConstants`.
 - Push a `vX.Y.Z` tag whose version does not match `pubspec.yaml` (the release workflow will fail).
 - Leave Italian (or other) user-facing copy in new UI — English only until i18n lands.
+- Bump version on a `develop` feature PR (that is the release PR's job).
 
 ## Develop commits
 
