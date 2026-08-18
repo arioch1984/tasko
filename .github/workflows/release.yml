@@ -1,0 +1,103 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    name: Build and publish Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version from tag
+        id: meta
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag $TAG is not a vX.Y.Z version tag"
+            exit 1
+          fi
+          PUBSPEC="$(grep -E '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)"
+          if [[ "$PUBSPEC" != "$VERSION" ]]; then
+            echo "pubspec.yaml version $PUBSPEC does not match tag $VERSION"
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "apk=tasko-${VERSION}.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses >/dev/null 2>&1 || true
+
+      - name: Decode release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${ANDROID_KEYSTORE_BASE64:-}" ]]; then
+            echo "Missing secret ANDROID_KEYSTORE_BASE64"
+            exit 1
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          test -s android/app/keystore.jks
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Test
+        run: flutter test
+
+      - name: Build signed release APK
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ vars.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${ANDROID_KEYSTORE_PASSWORD:-}" || -z "${ANDROID_KEY_PASSWORD:-}" || -z "${ANDROID_KEY_ALIAS:-}" ]]; then
+            echo "Missing ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD, or ANDROID_KEY_ALIAS"
+            exit 1
+          fi
+          flutter build apk --release
+
+      - name: Package APK and notes
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.meta.outputs.version }}"
+          APK="${{ steps.meta.outputs.apk }}"
+          SRC="build/app/outputs/flutter-apk/app-release.apk"
+          test -f "$SRC"
+          cp "$SRC" "$APK"
+          python3 .github/scripts/release_notes.py "$VERSION" release-notes.md
+          python3 .github/scripts/apk_signing_cert.py "$APK"
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh release create "${{ steps.meta.outputs.tag }}" "${{ steps.meta.outputs.apk }}" \
+            --title "${{ steps.meta.outputs.tag }}" \
+            --notes-file release-notes.md

@@ -17,13 +17,14 @@ English is the primary language for UI, README, changelog, commits, and release 
 1. **Bump version** in `pubspec.yaml` (`version: X.Y.Z+BUILD`) using semver.
 2. **Sync** `AppConstants.version` and `AppConstants.buildNumber` with that version.
 3. **Update** `CHANGELOG.md`: move items from `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section (Added / Changed / Fixed / Removed as needed).
-4. **Tag** the release commit with an annotated tag: `vX.Y.Z` (message summarizes the release).
-5. **Distribute** via GitHub Releases: create a release for `vX.Y.Z`, paste the changelog section, attach `tasko-X.Y.Z.apk`. The in-app version string must match the release.
+4. **Tag** the release commit with an annotated tag: `vX.Y.Z` (message summarizes the release) and **push the tag**.
+5. **Distribute** via GitHub Releases: `.github/workflows/release.yml` builds the signed APK and creates the release for `vX.Y.Z` with `tasko-X.Y.Z.apk` and the changelog section. The in-app version string must match the tag. Do not upload a manually built APK unless Actions is unavailable.
 
 ## Do not
 
 - Commit to `main` without a version bump + changelog + tag.
 - Publish an APK whose filename or Release title does not match `pubspec` / `AppConstants`.
+- Push a `vX.Y.Z` tag whose version does not match `pubspec.yaml` (the release workflow will fail).
 - Leave Italian (or other) user-facing copy in new UI — English only until i18n lands.
 
 ## Develop commits
