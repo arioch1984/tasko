@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
-import 'package:tasko/core/theme.dart';
 import 'package:tasko/data/providers.dart';
 import 'package:tasko/domain/models.dart';
 
@@ -281,7 +280,6 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   AppStrings.metadataFootnote,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontSize: 12,
-                        color: TaskoColors.warmGrey,
                       ),
                 ),
               ],

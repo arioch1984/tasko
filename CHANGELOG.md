@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Dark mode with a warm charcoal palette that matches the existing Tasko theme
+- Appearance setting: follow the device by default, or force Light / Dark (saved on-device)
+
 ## [0.1.2] - 2026-08-18
 
 ### Added

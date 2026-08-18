@@ -7,9 +7,10 @@ import 'package:tasko/core/constants.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/mascot/tasko_mascot.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
-import 'package:tasko/core/theme.dart';
+import 'package:tasko/core/theme_preference.dart';
 import 'package:tasko/data/providers.dart';
 import 'package:tasko/domain/models.dart';
+import 'package:tasko/features/settings/appearance_dialog.dart';
 import 'package:tasko/features/tasks/task_tile.dart';
 
 enum HomeView { today, upcoming, list }
@@ -33,6 +34,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final labelsAsync = ref.watch(labelsProvider);
     final sortMode = ref.watch(sortModeProvider);
     final labelFilter = ref.watch(selectedLabelFilterProvider);
+    final themePreference = ref.watch(themePreferenceProvider);
 
     ref.listen(celebrateTickProvider, (prev, next) {
       if (prev != next && next > 0) {
@@ -82,7 +84,6 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         ],
       ),
       drawer: Drawer(
-        backgroundColor: TaskoColors.cream,
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -129,14 +130,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   Navigator.pop(context);
                 },
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text(AppStrings.lists, style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: TaskoColors.warmGrey,
-                  letterSpacing: 0.6,
-                )),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  AppStrings.lists,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.6,
+                      ),
+                ),
               ),
               Expanded(
                 child: listsAsync.when(
@@ -218,6 +221,18 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 },
               ),
               ListTile(
+                leading: Icon(themePreference.icon),
+                title: const Text(AppStrings.appearance),
+                subtitle: Text(
+                  AppStrings.themePreferenceLabel(themePreference),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (!context.mounted) return;
+                  await showAppearanceDialog(context);
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.logout_rounded),
                 title: const Text(AppStrings.signOut),
                 onTap: () {
@@ -293,7 +308,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             Positioned.fill(
               child: IgnorePointer(
                 child: ColoredBox(
-                  color: TaskoColors.mist.withValues(alpha: 0.55),
+                  color: Theme.of(context)
+                      .scaffoldBackgroundColor
+                      .withValues(alpha: 0.55),
                   child: const Center(
                     child: TaskoMascot(
                       pose: TaskoPose.celebrate,

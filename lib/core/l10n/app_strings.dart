@@ -1,3 +1,5 @@
+import 'package:tasko/core/theme_preference.dart';
+
 /// English UI copy for Tasko.
 ///
 /// Primary language is English. Full localization (ARB / flutter_gen) can be
@@ -22,8 +24,21 @@ class AppStrings {
   static const create = 'Create';
   static const labels = 'Labels';
   static const signOut = 'Sign out';
+  static const appearance = 'Appearance';
+  static const themeSystem = 'System default';
+  static const themeLight = 'Light';
+  static const themeDark = 'Dark';
+  static const themeSystemHint = 'Match the device setting';
+  static const done = 'Done';
   static const all = 'All';
   static const selectAList = 'Select a list';
+
+  static String themePreferenceLabel(ThemePreference preference) =>
+      switch (preference) {
+        ThemePreference.system => themeSystem,
+        ThemePreference.light => themeLight,
+        ThemePreference.dark => themeDark,
+      };
 
   // Empty / celebrate
   static const niceWork = 'Nice work!';
