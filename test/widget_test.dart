@@ -105,10 +105,12 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.byTooltip(AppStrings.appearance));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.text(AppStrings.themeDark));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(scaffoldBrightness(tester), Brightness.dark);
     expect(prefs.getString(ThemePreference.storageKey), 'dark');
