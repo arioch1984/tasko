@@ -97,7 +97,8 @@ class LabelsScreen extends ConsumerWidget {
                             shape: BoxShape.circle,
                             border: selected
                                 ? Border.all(
-                                    color: TaskoColors.charcoal,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                     width: 2,
                                   )
                                 : null,
