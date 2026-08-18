@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings for Today: keep overdue on Today, or split them into a separate Overdue drawer item
 - Configurable reschedule shortcuts for overdue tasks (single task or bulk), with Pick a date as a fallback
 
+### Changed
+
+- Date pickers start the week on Monday
+
 ### Fixed
 
 - Tasko the badger mascot no longer sits on a white rectangle in dark theme (transparent PNGs)
