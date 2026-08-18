@@ -1,0 +1,6 @@
+{
+  "name": "Tasko (Flutter)",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh",
+  "chromeExecutablePath": "/usr/local/bin/google-chrome"
+}
