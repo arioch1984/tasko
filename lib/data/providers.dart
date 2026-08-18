@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tasko/auth/auth_provider.dart';
+import 'package:tasko/core/dates.dart';
+import 'package:tasko/core/today_layout_preference.dart';
 import 'package:tasko/data/api/google_tasks_api.dart';
 import 'package:tasko/data/repositories/tasks_repository.dart';
 import 'package:tasko/domain/models.dart';
@@ -20,8 +22,7 @@ final taskListsProvider =
   return ref.watch(tasksRepositoryProvider).fetchLists();
 });
 
-final labelsProvider =
-    FutureProvider.autoDispose<List<TaskLabel>>((ref) async {
+final labelsProvider = FutureProvider.autoDispose<List<TaskLabel>>((ref) async {
   final auth = ref.watch(authProvider);
   if (!auth.isSignedIn) return [];
   return ref.watch(tasksRepositoryProvider).loadLabels();
@@ -81,25 +82,66 @@ final allOpenTasksProvider =
   return all.where((t) => !t.isCompleted && !t.isSubtask).toList();
 });
 
+List<TaskItem> tasksForToday(
+  List<TaskItem> all,
+  DateTime now, {
+  required bool includeOverdue,
+}) {
+  final today = calendarToday(now);
+  return all.where((t) {
+    if (t.dueDate == null) return false;
+    final due = calendarDay(t.dueDate!);
+    if (includeOverdue) return !due.isAfter(today);
+    return due == today;
+  }).toList();
+}
+
+List<TaskItem> tasksOverdue(List<TaskItem> all, DateTime now) {
+  return all.where((t) => isOverdue(t.dueDate, now)).toList();
+}
+
+List<TaskItem> tasksUpcoming(List<TaskItem> all, DateTime now) {
+  final today = calendarToday(now);
+  final end = today.add(const Duration(days: 7));
+  return all.where((t) {
+    if (t.dueDate == null) return false;
+    final due = calendarDay(t.dueDate!);
+    return due.isAfter(today) && !due.isAfter(end);
+  }).toList();
+}
+
 final todayTasksProvider =
     FutureProvider.autoDispose<List<TaskItem>>((ref) async {
   final all = await ref.watch(allOpenTasksProvider.future);
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  return all.where((t) {
-    if (t.dueDate == null) return false;
-    return !t.dueDate!.isAfter(today);
-  }).toList();
+  final includeOverdue = ref.watch(todayLayoutProvider) == TodayLayout.combined;
+  return tasksForToday(
+    all,
+    DateTime.now(),
+    includeOverdue: includeOverdue,
+  );
+});
+
+final overdueTasksProvider =
+    FutureProvider.autoDispose<List<TaskItem>>((ref) async {
+  final all = await ref.watch(allOpenTasksProvider.future);
+  return tasksOverdue(all, DateTime.now());
 });
 
 final upcomingTasksProvider =
     FutureProvider.autoDispose<List<TaskItem>>((ref) async {
   final all = await ref.watch(allOpenTasksProvider.future);
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final end = today.add(const Duration(days: 7));
-  return all.where((t) {
-    if (t.dueDate == null) return false;
-    return t.dueDate!.isAfter(today) && !t.dueDate!.isAfter(end);
-  }).toList();
+  return tasksUpcoming(all, DateTime.now());
 });
+
+void invalidateTaskCaches(
+  void Function(ProviderOrFamily provider) invalidate, {
+  Iterable<String> listIds = const [],
+}) {
+  invalidate(allOpenTasksProvider);
+  invalidate(todayTasksProvider);
+  invalidate(overdueTasksProvider);
+  invalidate(upcomingTasksProvider);
+  for (final listId in listIds) {
+    invalidate(listTasksProvider(listId));
+  }
+}

@@ -1,6 +1,6 @@
 # Tasko
 
-Improved Android UI for **Google Tasks**: priority, labels, sorting, and smart views (Today / Upcoming). Tasks live only on Google Tasks — Tasko is the interface.
+Improved Android UI for **Google Tasks**: priority, labels, sorting, and smart views (Today / Upcoming, optional Overdue). Tasks live only on Google Tasks — Tasko is the interface.
 
 Mascot: **Tasko the badger** (*tasso* + *task*).
 
