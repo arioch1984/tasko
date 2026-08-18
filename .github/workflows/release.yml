@@ -91,10 +91,7 @@ jobs:
           test -f "$SRC"
           cp "$SRC" "$APK"
           python3 .github/scripts/release_notes.py "$VERSION" release-notes.md
-          if keytool -printcert -jarfile "$APK" | grep -q "CN=Android Debug"; then
-            echo "APK is still signed with the debug keystore"
-            exit 1
-          fi
+          python3 .github/scripts/apk_signing_cert.py "$APK"
 
       - name: Publish GitHub Release
         env:
