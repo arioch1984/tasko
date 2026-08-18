@@ -39,7 +39,8 @@ jobs:
         run: |
           set -euo pipefail
           python3 .github/scripts/prepare_release.py \
-            --github-output "$GITHUB_OUTPUT"
+            --github-output "$GITHUB_OUTPUT" \
+            --body-file "$RUNNER_TEMP/release-pr-body.md"
 
       - name: Nothing to ship
         if: steps.prep.outputs.skip == 'true'
@@ -52,7 +53,6 @@ jobs:
           VERSION: ${{ steps.prep.outputs.version }}
           BRANCH: ${{ steps.prep.outputs.branch }}
           TITLE: ${{ steps.prep.outputs.title }}
-          BODY: ${{ steps.prep.outputs.body }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -65,13 +65,21 @@ jobs:
             git commit -m "Release v${VERSION}."
           fi
           git push -u origin "$BRANCH" --force
+          BODY_FILE="$RUNNER_TEMP/release-pr-body.md"
           EXISTING="$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
           if [[ -n "$EXISTING" ]]; then
-            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
-          else
-            # Close a stale release PR if the version number changed.
-            for pr in $(gh pr list --base main --state open --json number,headRefName --jq '.[] | select(.headRefName|startswith("release/v")) | .number'); do
-              gh pr close "$pr" --comment "Superseded by ${BRANCH}."
-            done
-            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
+            gh pr edit "$EXISTING" --title "$TITLE" --body-file "$BODY_FILE"
+            exit 0
           fi
+          for pr in $(gh pr list --base main --state open --json number,headRefName --jq '.[] | select(.headRefName|startswith("release/v")) | .number'); do
+            gh pr close "$pr" --comment "Superseded by ${BRANCH}."
+          done
+          if gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$BODY_FILE"; then
+            exit 0
+          fi
+          echo "::error::GitHub Actions could not open the release PR."
+          echo "Enable: Settings → Actions → General → Workflow permissions"
+          echo "  1. Read and write"
+          echo "  2. Allow GitHub Actions to create and approve pull requests"
+          echo "Then open: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH}?expand=1"
+          exit 1

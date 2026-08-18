@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import datetime as dt
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import prepare_release as pr
 
@@ -110,6 +112,33 @@ class PrepareReleaseTest(unittest.TestCase):
             self.assertIn("## [Unreleased]", changelog)
             unreleased_now = pr.parse_unreleased(changelog)
             self.assertFalse(unreleased_now.has_items())
+
+    def test_cli_writes_body_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "lib/core").mkdir(parents=True)
+            (root / "CHANGELOG.md").write_text(CHANGELOG, encoding="utf-8")
+            (root / "pubspec.yaml").write_text(PUBSPEC, encoding="utf-8")
+            (root / "lib/core/constants.dart").write_text(
+                CONSTANTS, encoding="utf-8"
+            )
+            body_file = root / "pr-body.md"
+            argv = [
+                "prepare_release.py",
+                "--root",
+                str(root),
+                "--base-pubspec",
+                PUBSPEC,
+                "--body-file",
+                str(body_file),
+                "--today",
+                "2026-08-18",
+            ]
+            with mock.patch.object(sys, "argv", argv):
+                pr.main()
+            text = body_file.read_text(encoding="utf-8")
+            self.assertIn("publishes **v0.3.0**", text)
+            self.assertIn("tasko-0.3.0.apk", text)
 
     def test_skip_when_nothing_to_ship(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
