@@ -13,15 +13,28 @@ Prebuilt Android APKs are published on **GitHub Releases**:
 - Latest release: <https://github.com/arioch1984/tasko/releases/latest>
 - All versions: <https://github.com/arioch1984/tasko/releases>
 
-Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.1.1.apk`). Install from Releases until another distribution channel is set up.
+Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.1.2.apk`). Pushing that tag runs GitHub Actions, which builds a signed APK and publishes the GitHub Release. Install from Releases until another distribution channel is set up.
+
+If you previously installed a debug-signed APK, uninstall it before installing a release-signed build — Android will not update across signing keys.
 
 ### Build a release APK locally
 
 ```bash
 flutter build apk --release
 # output: build/app/outputs/flutter-apk/app-release.apk
-# rename before upload, e.g. tasko-0.1.1.apk
+# rename before upload, e.g. tasko-0.1.2.apk
 ```
+
+For a locally signed release APK (same key as CI), add `android/key.properties` (gitignored):
+
+```properties
+storePassword=...
+keyPassword=...
+keyAlias=tasko
+storeFile=/path/to/tasko-release.jks
+```
+
+Without that file, `flutter build apk --release` still uses the debug keystore.
 
 ## Stack
 
@@ -122,8 +135,7 @@ Every commit that lands on `main` must:
 
 1. Bump `version` in `pubspec.yaml` (and `AppConstants.version` / `buildNumber`)
 2. Update [CHANGELOG.md](CHANGELOG.md)
-3. Create an annotated git tag `vX.Y.Z`
-4. Publish a GitHub Release with the changelog notes and the matching APK
+3. Create an annotated git tag `vX.Y.Z` and push it — GitHub Actions publishes the Release and `tasko-X.Y.Z.apk`
 
 See `.cursor/rules/release-versioning.mdc` for the agent checklist.
 

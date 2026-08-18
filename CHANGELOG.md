@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-18
+
+### Added
+
+- GitHub Actions builds a signed release APK and publishes it to GitHub Releases when a `vX.Y.Z` tag is pushed
+- Android release signing from CI secrets (or local `android/key.properties`); debug signing remains the local fallback
+
+### Changed
+
+- Tagging `vX.Y.Z` on `main` is enough to ship the APK — no manual `flutter build` upload step
+
 ## [0.1.1] - 2026-07-26
 
 ### Added
@@ -33,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/arioch1984/tasko/releases/tag/v0.1.2
 [0.1.1]: https://github.com/arioch1984/tasko/releases/tag/v0.1.1
 [0.1.0]: https://github.com/arioch1984/tasko/releases/tag/v0.1.0
