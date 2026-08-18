@@ -1,0 +1,77 @@
+name: Prepare release PR
+
+# After work lands on develop, open or refresh a PR into main with the
+# version bump, changelog, and AppConstants needed to publish.
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: prepare-release-pr
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare:
+    name: Open or update PR to main
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Test release script
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+
+      - name: Fetch main
+        run: git fetch origin main
+
+      - name: Compute release
+        id: prep
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/prepare_release.py \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Nothing to ship
+        if: steps.prep.outputs.skip == 'true'
+        run: echo "${{ steps.prep.outputs.reason }}"
+
+      - name: Push release branch and upsert PR
+        if: steps.prep.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.prep.outputs.version }}
+          BRANCH: ${{ steps.prep.outputs.branch }}
+          TITLE: ${{ steps.prep.outputs.title }}
+          BODY: ${{ steps.prep.outputs.body }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add pubspec.yaml lib/core/constants.dart CHANGELOG.md
+          if git diff --cached --quiet; then
+            echo "Release files unchanged"
+          else
+            git commit -m "Release v${VERSION}."
+          fi
+          git push -u origin "$BRANCH" --force
+          EXISTING="$(gh pr list --base main --head "$BRANCH" --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "$EXISTING" ]]; then
+            gh pr edit "$EXISTING" --title "$TITLE" --body "$BODY"
+          else
+            # Close a stale release PR if the version number changed.
+            for pr in $(gh pr list --base main --state open --json number,headRefName --jq '.[] | select(.headRefName|startswith("release/v")) | .number'); do
+              gh pr close "$pr" --comment "Superseded by ${BRANCH}."
+            done
+            gh pr create --base main --head "$BRANCH" --title "$TITLE" --body "$BODY"
+          fi

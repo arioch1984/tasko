@@ -43,14 +43,18 @@ All work (features, bug fixes, hotfixes) starts on a **dedicated branch**. Never
 |------|-------------|------|-----------|
 | Feature | `develop` | `feature/<short-name>` | `develop` |
 | Bug fix | `develop` | `fix/<short-name>` | `develop` |
-| Hotfix | `main` | `hotfix/<short-name>` | `main`, then back-port to `develop` |
+| Hotfix | `develop` | `hotfix/<short-name>` | `develop` |
 
 Cloud Agent runs may use the required `cursor/<short-name>-<id>` prefix; still treat it as a feature/fix/hotfix branch, not as `main`/`develop`.
 
+In one session, keep updating the **same** PR into `develop` as Fabio adds follow-ups.
+
 After implementation:
 
-- Open a PR for review. Land on `develop` only after Fabio approves.
-- `main` is release-only. Do not merge a feature/fix to `main` unless Fabio explicitly approves a release (then follow `release-versioning.mdc`: version bump, changelog, tag, APK).
+- Open (or update) a PR into `develop`. Land on `develop` only after Fabio approves.
+- **Do not** open a PR into `main`, bump `pubspec.yaml` / `AppConstants`, or push a `vX.Y.Z` tag from a feature branch.
+- Merging into `develop` runs `.github/workflows/prepare-release-pr.yml`, which opens or refreshes a `release/vX.Y.Z` PR into `main` (version, changelog, build number).
+- Fabio merging that release PR into `main` runs `.github/workflows/release.yml`: tag, signed APK, GitHub Release.
 
 ## Safe development
 

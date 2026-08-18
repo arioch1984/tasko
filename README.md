@@ -13,7 +13,9 @@ Prebuilt Android APKs are published on **GitHub Releases**:
 - Latest release: <https://github.com/arioch1984/tasko/releases/latest>
 - All versions: <https://github.com/arioch1984/tasko/releases>
 
-Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.2.0.apk`). Pushing that tag runs GitHub Actions, which builds a signed APK and publishes the GitHub Release. Install from Releases until another distribution channel is set up.
+Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.2.0.apk`).
+
+Day-to-day PRs merge into `develop`. That opens (or updates) a **Release** PR into `main`. Merging the Release PR tags `vX.Y.Z` and GitHub Actions builds the signed APK. Manual `git tag` still works as a fallback. Install from Releases until another distribution channel is set up.
 
 If you previously installed a debug-signed APK, uninstall it before installing a release-signed build — Android will not update across signing keys.
 
