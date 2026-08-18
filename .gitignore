@@ -35,3 +35,5 @@ releases/*.apk
 .DS_Store
 .env
 *.log
+__pycache__/
+*.pyc
