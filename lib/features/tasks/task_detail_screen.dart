@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tasko/core/dates.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
+import 'package:tasko/core/reschedule_shortcuts_preference.dart';
 import 'package:tasko/data/providers.dart';
 import 'package:tasko/domain/models.dart';
 
@@ -223,11 +225,26 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     ],
                   ),
                 ),
+                if (_due != null && isOverdue(_due)) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final shortcut
+                          in ref.watch(rescheduleShortcutsProvider))
+                        ActionChip(
+                          label: Text(shortcut.label),
+                          onPressed: () =>
+                              setState(() => _due = shortcut.resolve()),
+                        ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: _listId,
-                  decoration:
-                      const InputDecoration(labelText: AppStrings.list),
+                  decoration: const InputDecoration(labelText: AppStrings.list),
                   items: lists
                       .map(
                         (l) => DropdownMenuItem(
@@ -267,8 +284,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                             if (v) {
                               _labelIds = [..._labelIds, label.id];
                             } else {
-                              _labelIds =
-                                  _labelIds.where((id) => id != label.id).toList();
+                              _labelIds = _labelIds
+                                  .where((id) => id != label.id)
+                                  .toList();
                             }
                           });
                         },

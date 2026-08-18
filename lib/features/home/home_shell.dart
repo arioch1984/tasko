@@ -4,16 +4,20 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:tasko/auth/auth_provider.dart';
 import 'package:tasko/core/constants.dart';
+import 'package:tasko/core/dates.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/mascot/tasko_mascot.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
+import 'package:tasko/core/reschedule_shortcuts_preference.dart';
 import 'package:tasko/core/theme_preference.dart';
+import 'package:tasko/core/today_layout_preference.dart';
 import 'package:tasko/data/providers.dart';
 import 'package:tasko/domain/models.dart';
 import 'package:tasko/features/settings/appearance_dialog.dart';
+import 'package:tasko/features/tasks/reschedule_sheet.dart';
 import 'package:tasko/features/tasks/task_tile.dart';
 
-enum HomeView { today, upcoming, list }
+enum HomeView { today, overdue, upcoming, list }
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -27,6 +31,31 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   String? _listId;
   String? _listTitle;
   bool _showCelebrate = false;
+  bool _selecting = false;
+  final Map<String, TaskItem> _selected = {};
+
+  String _taskKey(TaskItem task) => '${task.listId}/${task.id}';
+
+  void _clearSelection() {
+    setState(() {
+      _selecting = false;
+      _selected.clear();
+    });
+  }
+
+  void _openView(HomeView view, {String? listId, String? listTitle}) {
+    setState(() {
+      _view = view;
+      if (view == HomeView.list) {
+        _listId = listId;
+        if (listTitle != null) _listTitle = listTitle;
+      } else {
+        _listId = null;
+      }
+      _selecting = false;
+      _selected.clear();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +64,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final sortMode = ref.watch(sortModeProvider);
     final labelFilter = ref.watch(selectedLabelFilterProvider);
     final themePreference = ref.watch(themePreferenceProvider);
+    final todayLayout = ref.watch(todayLayoutProvider);
+    final splitToday = todayLayout == TodayLayout.split;
 
     ref.listen(celebrateTickProvider, (prev, next) {
       if (prev != next && next > 0) {
@@ -45,42 +76,80 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       }
     });
 
-    final title = switch (_view) {
-      HomeView.today => AppStrings.today,
-      HomeView.upcoming => AppStrings.upcoming,
-      HomeView.list => _listTitle ?? AppStrings.list,
+    ref.listen(todayLayoutProvider, (prev, next) {
+      if (next == TodayLayout.combined && _view == HomeView.overdue) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _openView(HomeView.today);
+        });
+      }
+    });
+
+    final title = _selecting
+        ? AppStrings.selectedCount(_selected.length)
+        : switch (_view) {
+            HomeView.today => AppStrings.today,
+            HomeView.overdue => AppStrings.overdue,
+            HomeView.upcoming => AppStrings.upcoming,
+            HomeView.list => _listTitle ?? AppStrings.list,
+          };
+
+    final overdueInView = switch (_view) {
+      HomeView.today => (ref.watch(todayTasksProvider).valueOrNull ?? [])
+          .any((t) => isOverdue(t.dueDate)),
+      HomeView.overdue =>
+        (ref.watch(overdueTasksProvider).valueOrNull ?? []).isNotEmpty,
+      _ => false,
     };
 
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
         actions: [
-          PopupMenuButton<SortMode>(
-            tooltip: AppStrings.sort,
-            icon: const Icon(Icons.sort_rounded),
-            initialValue: sortMode,
-            onSelected: (mode) {
-              ref.read(sortModeProvider.notifier).state = mode;
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(
-                value: SortMode.dueDate,
-                child: Text(AppStrings.dueDate),
+          if (_selecting) ...[
+            IconButton(
+              tooltip: AppStrings.reschedule,
+              onPressed: _selected.isEmpty ? null : _rescheduleSelected,
+              icon: const Icon(Icons.event_repeat_rounded),
+            ),
+            IconButton(
+              tooltip: AppStrings.done,
+              onPressed: _clearSelection,
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ] else ...[
+            if (overdueInView)
+              IconButton(
+                tooltip: AppStrings.selectOverdue,
+                onPressed: () => setState(() => _selecting = true),
+                icon: const Icon(Icons.checklist_rounded),
               ),
-              PopupMenuItem(
-                value: SortMode.priority,
-                child: Text(AppStrings.priority),
-              ),
-              PopupMenuItem(
-                value: SortMode.title,
-                child: Text(AppStrings.title),
-              ),
-              PopupMenuItem(
-                value: SortMode.manual,
-                child: Text(AppStrings.manual),
-              ),
-            ],
-          ),
+            PopupMenuButton<SortMode>(
+              tooltip: AppStrings.sort,
+              icon: const Icon(Icons.sort_rounded),
+              initialValue: sortMode,
+              onSelected: (mode) {
+                ref.read(sortModeProvider.notifier).state = mode;
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: SortMode.dueDate,
+                  child: Text(AppStrings.dueDate),
+                ),
+                PopupMenuItem(
+                  value: SortMode.priority,
+                  child: Text(AppStrings.priority),
+                ),
+                PopupMenuItem(
+                  value: SortMode.title,
+                  child: Text(AppStrings.title),
+                ),
+                PopupMenuItem(
+                  value: SortMode.manual,
+                  child: Text(AppStrings.manual),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
       drawer: Drawer(
@@ -96,6 +165,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                       TaskoPose.idle.assetPath,
                       width: 48,
                       height: 48,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -111,22 +182,26 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 title: const Text(AppStrings.today),
                 selected: _view == HomeView.today,
                 onTap: () {
-                  setState(() {
-                    _view = HomeView.today;
-                    _listId = null;
-                  });
+                  _openView(HomeView.today);
                   Navigator.pop(context);
                 },
               ),
+              if (splitToday)
+                ListTile(
+                  leading: const Icon(Icons.event_busy_rounded),
+                  title: const Text(AppStrings.overdue),
+                  selected: _view == HomeView.overdue,
+                  onTap: () {
+                    _openView(HomeView.overdue);
+                    Navigator.pop(context);
+                  },
+                ),
               ListTile(
                 leading: const Icon(Icons.upcoming_rounded),
                 title: const Text(AppStrings.upcoming),
                 selected: _view == HomeView.upcoming,
                 onTap: () {
-                  setState(() {
-                    _view = HomeView.upcoming;
-                    _listId = null;
-                  });
+                  _openView(HomeView.upcoming);
                   Navigator.pop(context);
                 },
               ),
@@ -150,14 +225,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                       return ListTile(
                         leading: const Icon(Icons.list_alt_rounded),
                         title: Text(list.title),
-                        selected:
-                            _view == HomeView.list && _listId == list.id,
+                        selected: _view == HomeView.list && _listId == list.id,
                         onTap: () {
-                          setState(() {
-                            _view = HomeView.list;
-                            _listId = list.id;
-                            _listTitle = list.title;
-                          });
+                          _openView(
+                            HomeView.list,
+                            listId: list.id,
+                            listTitle: list.title,
+                          );
                           Navigator.pop(context);
                         },
                       );
@@ -205,11 +279,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                   final list =
                       await ref.read(tasksRepositoryProvider).createList(name);
                   ref.invalidate(taskListsProvider);
-                  setState(() {
-                    _view = HomeView.list;
-                    _listId = list.id;
-                    _listTitle = list.title;
-                  });
+                  _openView(
+                    HomeView.list,
+                    listId: list.id,
+                    listTitle: list.title,
+                  );
                 },
               ),
               ListTile(
@@ -218,6 +292,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/labels');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings_outlined),
+                title: const Text(AppStrings.settings),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/settings');
                 },
               ),
               ListTile(
@@ -244,13 +326,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          final q = _listId != null ? '?listId=$_listId' : '';
-          context.push('/task/new$q');
-        },
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: _selecting
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                final q = _listId != null ? '?listId=$_listId' : '';
+                context.push('/task/new$q');
+              },
+              child: const Icon(Icons.add_rounded),
+            ),
       body: Stack(
         children: [
           Column(
@@ -288,8 +372,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                               selected: labelFilter == label.id,
                               onSelected: (_) {
                                 ref
-                                    .read(
-                                        selectedLabelFilterProvider.notifier)
+                                    .read(selectedLabelFilterProvider.notifier)
                                     .state = label.id;
                               },
                             ),
@@ -301,7 +384,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 },
                 orElse: () => const SizedBox.shrink(),
               ),
-              Expanded(child: _buildBody(sortMode, labelFilter)),
+              Expanded(
+                child: _buildBody(sortMode, labelFilter),
+              ),
             ],
           ),
           if (_showCelebrate)
@@ -326,19 +411,73 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     );
   }
 
+  Future<void> _rescheduleSelected() async {
+    final tasks = _selected.values.toList();
+    if (tasks.isEmpty) return;
+    final shortcuts = ref.read(rescheduleShortcutsProvider);
+    final due = await showRescheduleSheet(
+      context: context,
+      shortcuts: shortcuts,
+      taskCount: tasks.length,
+    );
+    if (due == null || !mounted) return;
+    try {
+      await ref.read(tasksRepositoryProvider).rescheduleTasks(tasks, due);
+      invalidateTaskCaches(
+        ref.invalidate,
+        listIds: tasks.map((t) => t.listId),
+      );
+      if (!mounted) return;
+      _clearSelection();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.rescheduledCount(tasks.length))),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.rescheduleFailed)),
+      );
+    }
+  }
+
   Widget _buildBody(SortMode sortMode, String? labelFilter) {
+    final selection = (
+      selecting: _selecting,
+      selectedIds: _selected.keys.toSet(),
+      onToggle: (TaskItem task) {
+        if (!isOverdue(task.dueDate)) return;
+        setState(() {
+          final key = _taskKey(task);
+          if (_selected.containsKey(key)) {
+            _selected.remove(key);
+          } else {
+            _selected[key] = task;
+          }
+        });
+      },
+    );
+
     return switch (_view) {
       HomeView.today => _SmartListBody(
           provider: todayTasksProvider,
           emptyMessage: AppStrings.nothingDueToday,
           sortMode: sortMode,
           labelFilter: labelFilter,
+          selection: selection,
+        ),
+      HomeView.overdue => _SmartListBody(
+          provider: overdueTasksProvider,
+          emptyMessage: AppStrings.nothingOverdue,
+          sortMode: sortMode,
+          labelFilter: labelFilter,
+          selection: selection,
         ),
       HomeView.upcoming => _SmartListBody(
           provider: upcomingTasksProvider,
           emptyMessage: AppStrings.nothingUpcoming,
           sortMode: sortMode,
           labelFilter: labelFilter,
+          selection: selection,
         ),
       HomeView.list => _listId == null
           ? const Center(child: Text(AppStrings.selectAList))
@@ -346,10 +485,17 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               listId: _listId!,
               sortMode: sortMode,
               labelFilter: labelFilter,
+              selection: selection,
             ),
     };
   }
 }
+
+typedef _TaskSelection = ({
+  bool selecting,
+  Set<String> selectedIds,
+  void Function(TaskItem task) onToggle,
+});
 
 class _SmartListBody extends ConsumerWidget {
   const _SmartListBody({
@@ -357,12 +503,14 @@ class _SmartListBody extends ConsumerWidget {
     required this.emptyMessage,
     required this.sortMode,
     required this.labelFilter,
+    required this.selection,
   });
 
   final ProviderListenable<AsyncValue<List<TaskItem>>> provider;
   final String emptyMessage;
   final SortMode sortMode;
   final String? labelFilter;
+  final _TaskSelection selection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -383,15 +531,21 @@ class _SmartListBody extends ConsumerWidget {
         }
         return RefreshIndicator(
           onRefresh: () async {
-            ref.invalidate(todayTasksProvider);
-            ref.invalidate(upcomingTasksProvider);
-            ref.invalidate(allOpenTasksProvider);
+            invalidateTaskCaches(ref.invalidate);
           },
           child: ListView.builder(
             padding: const EdgeInsets.only(bottom: 88),
             itemCount: visible.length,
             itemBuilder: (context, index) {
-              return TaskTile(task: visible[index], labels: labels);
+              final task = visible[index];
+              final key = '${task.listId}/${task.id}';
+              return TaskTile(
+                task: task,
+                labels: labels,
+                selecting: selection.selecting,
+                selected: selection.selectedIds.contains(key),
+                onToggleSelect: () => selection.onToggle(task),
+              );
             },
           ),
         );
@@ -407,11 +561,13 @@ class _ListBody extends ConsumerWidget {
     required this.listId,
     required this.sortMode,
     required this.labelFilter,
+    required this.selection,
   });
 
   final String listId;
   final SortMode sortMode;
   final String? labelFilter;
+  final _TaskSelection selection;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -438,7 +594,15 @@ class _ListBody extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 88),
             itemCount: visible.length,
             itemBuilder: (context, index) {
-              return TaskTile(task: visible[index], labels: labels);
+              final task = visible[index];
+              final key = '${task.listId}/${task.id}';
+              return TaskTile(
+                task: task,
+                labels: labels,
+                selecting: selection.selecting,
+                selected: selection.selectedIds.contains(key),
+                onToggleSelect: () => selection.onToggle(task),
+              );
             },
           ),
         );
@@ -451,9 +615,8 @@ class _ListBody extends ConsumerWidget {
 
 String formatDue(DateTime? due) {
   if (due == null) return '';
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final d = DateTime(due.year, due.month, due.day);
+  final today = calendarToday();
+  final d = calendarDay(due);
   if (d == today) return AppStrings.today;
   if (d == today.add(const Duration(days: 1))) return AppStrings.tomorrow;
   if (d == today.subtract(const Duration(days: 1))) {
