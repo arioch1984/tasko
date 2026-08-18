@@ -6,6 +6,7 @@ import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/mascot/tasko_mascot.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
 import 'package:tasko/core/theme.dart';
+import 'package:tasko/features/settings/appearance_dialog.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -37,14 +38,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
 
+    final brightness = Theme.of(context).brightness;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [TaskoColors.cream, TaskoColors.mist, Color(0xFFD9EDE9)],
+            colors: signInGradientColors(brightness),
           ),
         ),
         child: SafeArea(
@@ -62,6 +65,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   children: [
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: AppearanceIconButton(),
+                    ),
                     const Spacer(flex: 2),
                     const TaskoMascot(pose: TaskoPose.wave, size: 200),
                     const SizedBox(height: 20),
@@ -70,7 +77,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
                       style:
                           Theme.of(context).textTheme.headlineLarge?.copyWith(
                                 fontSize: 44,
-                                color: TaskoColors.charcoal,
                               ),
                     ),
                     const SizedBox(height: 8),
@@ -84,7 +90,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
                       Text(
                         auth.error!,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: TaskoColors.danger),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -95,12 +103,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
                         onPressed:
                             auth.isLoading ? null : () => ref.read(authProvider.notifier).signIn(),
                         icon: auth.isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onPrimary,
                                 ),
                               )
                             : const Icon(Icons.login_rounded),
@@ -110,8 +118,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
                               : AppStrings.continueWithGoogle,
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: TaskoColors.teal,
-                          foregroundColor: Colors.white,
                           textStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -135,7 +141,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen>
                       AppConstants.versionLabel,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontSize: 12,
-                            color: TaskoColors.warmGrey,
                           ),
                     ),
                     const Spacer(),

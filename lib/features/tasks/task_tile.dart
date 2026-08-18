@@ -16,11 +16,13 @@ class TaskTile extends ConsumerWidget {
   final TaskItem task;
   final List<TaskLabel> labels;
 
-  Color _priorityColor(int p) => switch (p) {
+  Color _priorityColor(int p, Brightness brightness) => switch (p) {
         1 => TaskoColors.danger,
         2 => const Color(0xFFE07A3D),
         3 => TaskoColors.amber,
-        _ => TaskoColors.mistDeep,
+        _ => brightness == Brightness.dark
+            ? TaskoColors.nightBorder
+            : TaskoColors.mistDeep,
       };
 
   @override
@@ -62,7 +64,10 @@ class TaskTile extends ConsumerWidget {
                   },
                   icon: Icon(
                     Icons.circle_outlined,
-                    color: _priorityColor(task.priority),
+                    color: _priorityColor(
+                      task.priority,
+                      Theme.of(context).brightness,
+                    ),
                   ),
                 ),
               ),
@@ -89,8 +94,8 @@ class TaskTile extends ConsumerWidget {
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: overdue
-                                    ? TaskoColors.danger
-                                    : TaskoColors.tealDark,
+                                    ? Theme.of(context).colorScheme.error
+                                    : Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ...taskLabels.map(

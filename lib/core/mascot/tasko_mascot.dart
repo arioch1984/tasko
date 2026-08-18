@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
-import 'package:tasko/core/theme.dart';
 
 /// Reusable Tasko the badger mascot with optional message.
 class TaskoMascot extends StatelessWidget {
@@ -47,9 +46,7 @@ class TaskoMascot extends StatelessWidget {
           Text(
             message!,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: TaskoColors.warmGrey,
-                ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
       ],
