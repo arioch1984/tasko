@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-18
+
 ### Added
 
 - Dark mode with a warm charcoal palette that matches the existing Tasko theme
@@ -49,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/arioch1984/tasko/releases/tag/v0.2.0
 [0.1.2]: https://github.com/arioch1984/tasko/releases/tag/v0.1.2
 [0.1.1]: https://github.com/arioch1984/tasko/releases/tag/v0.1.1
 [0.1.0]: https://github.com/arioch1984/tasko/releases/tag/v0.1.0

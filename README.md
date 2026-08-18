@@ -13,7 +13,7 @@ Prebuilt Android APKs are published on **GitHub Releases**:
 - Latest release: <https://github.com/arioch1984/tasko/releases/latest>
 - All versions: <https://github.com/arioch1984/tasko/releases>
 
-Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.1.2.apk`). Pushing that tag runs GitHub Actions, which builds a signed APK and publishes the GitHub Release. Install from Releases until another distribution channel is set up.
+Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.2.0.apk`). Pushing that tag runs GitHub Actions, which builds a signed APK and publishes the GitHub Release. Install from Releases until another distribution channel is set up.
 
 If you previously installed a debug-signed APK, uninstall it before installing a release-signed build — Android will not update across signing keys.
 
@@ -22,7 +22,7 @@ If you previously installed a debug-signed APK, uninstall it before installing a
 ```bash
 flutter build apk --release
 # output: build/app/outputs/flutter-apk/app-release.apk
-# rename before upload, e.g. tasko-0.1.2.apk
+# rename before upload, e.g. tasko-0.2.0.apk
 ```
 
 For a locally signed release APK (same key as CI), add `android/key.properties` (gitignored):
@@ -172,6 +172,7 @@ Reserved list `__Tasko` with a task `Tasko Config` whose `notes` contain:
 - Filter by label
 - **Today** and **Upcoming** (7 days) views
 - Empty states and celebrate moments with Tasko mascot
+- Dark mode (follows the device, or force Light / Dark)
 
 ## Known API limits
 
