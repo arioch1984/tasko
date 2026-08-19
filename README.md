@@ -2,7 +2,7 @@
 
 Improved Android UI for **Google Tasks**: priority, labels, sorting, and smart views (Today / Upcoming, optional Overdue). Tasks live only on Google Tasks — Tasko is the interface.
 
-Mascot: **Tasko the badger** (*tasso* + *task*).
+Mascot: **Tasko the badger** (*tasso* + *task*), drawn as a stylized cartoon — bold outlines, flat colors, one teal accent.
 
 Primary language: **English** (docs, UI, changelog). Localization can be added later without rewriting call sites — see `lib/core/l10n/app_strings.dart`.
 
@@ -193,5 +193,6 @@ lib/
   data/           # API, codec, repository, providers
   domain/         # models
   features/       # UI (sign-in, home, tasks, labels)
-assets/mascot/    # Tasko poses
+assets/mascot/    # Tasko poses + head (transparent PNGs)
+assets/brand/     # 1024px head master the launcher icons are cut from
 ```

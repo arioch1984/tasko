@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Tasko the badger mascot redrawn in a stylized cartoon style (bold outlines, flat colors) replacing the 3D renders, including the launcher icon, web icons, and in-app poses
+- Drawer header shows Tasko's head instead of the full sitting pose
+
 ## [0.3.0] - 2026-08-18
 
 ### Added
