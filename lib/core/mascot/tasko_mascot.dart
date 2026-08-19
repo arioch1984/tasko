@@ -53,3 +53,23 @@ class TaskoMascot extends StatelessWidget {
     );
   }
 }
+
+/// Head-only Tasko, for compact spots such as the drawer header.
+class TaskoMark extends StatelessWidget {
+  const TaskoMark({super.key, this.size = 36});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final ratio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
+    return Image.asset(
+      taskoHeadAsset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
+      cacheWidth: (size * ratio).round(),
+    );
+  }
+}

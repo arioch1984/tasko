@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-19
+
+### Changed
+
+- Tasko the badger mascot redrawn in a stylized cartoon style (bold outlines, flat colors) replacing the 3D renders, including the launcher icon, web icons, and in-app poses
+- Drawer header shows Tasko's head instead of the full sitting pose
+
 ## [0.3.0] - 2026-08-18
 
 ### Added
@@ -66,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/arioch1984/tasko/releases/tag/v0.3.1
 [0.3.0]: https://github.com/arioch1984/tasko/releases/tag/v0.3.0
 [0.2.0]: https://github.com/arioch1984/tasko/releases/tag/v0.2.0
 [0.1.2]: https://github.com/arioch1984/tasko/releases/tag/v0.1.2

@@ -8,3 +8,6 @@ extension TaskoPoseAsset on TaskoPose {
         TaskoPose.celebrate => 'assets/mascot/tasko_celebrate.png',
       };
 }
+
+/// Head-only artwork, used for the drawer header and launcher icon.
+const String taskoHeadAsset = 'assets/mascot/tasko_head.png';
