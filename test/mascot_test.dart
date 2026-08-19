@@ -1,29 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tasko/core/mascot/tasko_mascot.dart';
-import 'package:tasko/core/mascot/tasko_painter.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
-import 'package:tasko/core/theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('painter repaints when pose or tint changes', () {
-    const idle = TaskoPainter(pose: TaskoPose.idle);
-    expect(
-        idle.shouldRepaint(const TaskoPainter(pose: TaskoPose.wave)), isTrue);
-    expect(
-      idle.shouldRepaint(const TaskoPainter(pose: TaskoPose.idle)),
-      isFalse,
-    );
-    expect(
-      const TaskoPainter(pose: TaskoPose.idle, headOnly: true)
-          .shouldRepaint(const TaskoPainter(pose: TaskoPose.idle)),
-      isTrue,
-    );
+  test('mascot assets are RGBA PNGs so dark surfaces show through', () async {
+    final paths = [
+      for (final pose in TaskoPose.values) pose.assetPath,
+      taskoHeadAsset,
+    ];
+    for (final path in paths) {
+      final data = await rootBundle.load(path);
+      expect(_pngColorType(data.buffer.asUint8List()), 6, reason: path);
+    }
   });
 
-  testWidgets('TaskoMascot and TaskoMark build for every pose', (tester) async {
+  testWidgets('every pose and the head mark render', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
@@ -37,37 +32,35 @@ void main() {
                 size: 80,
                 message: 'Nice',
               ),
-              TaskoMark(size: 32),
+              TaskoMark(size: 36),
             ],
           ),
         ),
       ),
     );
-    expect(find.byType(TaskoMascot), findsNWidgets(4));
-    expect(find.byType(TaskoMark), findsOneWidget);
-    expect(find.byType(CustomPaint), findsWidgets);
-    expect(find.text('Nice'), findsOneWidget);
-  });
 
-  testWidgets('TaskoMark follows onSurface in dark theme', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: taskoDarkTheme,
-        home: const Scaffold(body: Center(child: TaskoMark(size: 40))),
-      ),
-    );
-    final paint = tester.widget<CustomPaint>(
-      find.descendant(
-        of: find.byType(TaskoMark),
-        matching: find.byType(CustomPaint),
-      ),
-    );
-    final painter = paint.painter! as TaskoPainter;
-    expect(painter.headOnly, isTrue);
-    expect(painter.monochrome, isNotNull);
-    expect(
-      ThemeData.estimateBrightnessForColor(painter.monochrome!),
-      Brightness.light,
-    );
+    expect(find.byType(TaskoMascot), findsNWidgets(4));
+    expect(find.text('Nice'), findsOneWidget);
+    expect(find.byType(Image), findsNWidgets(5));
+
+    final assets =
+        tester.widgetList<Image>(find.byType(Image)).map(_assetNameOf);
+    expect(assets, containsAll([...TaskoPose.values.map((p) => p.assetPath)]));
+    expect(assets, contains(taskoHeadAsset));
   });
+}
+
+String _assetNameOf(Image image) {
+  final provider = image.image;
+  return switch (provider) {
+    AssetImage(:final assetName) => assetName,
+    ResizeImage(imageProvider: AssetImage(:final assetName)) => assetName,
+    _ => throw StateError('Unexpected provider: $provider'),
+  };
+}
+
+/// PNG IHDR color type: 6 = Truecolor with alpha.
+int _pngColorType(List<int> bytes) {
+  // signature(8) + length(4) + 'IHDR'(4) + width(4) + height(4) + bitDepth(1)
+  return bytes[25];
 }
