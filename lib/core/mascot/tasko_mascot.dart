@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tasko/core/mascot/tasko_painter.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
 
 /// Reusable Tasko the badger mascot with optional message.
@@ -32,13 +33,14 @@ class TaskoMascot extends StatelessWidget {
               ),
             );
           },
-          child: Image.asset(
-            pose.assetPath,
+          child: SizedBox(
             key: ValueKey(pose),
             width: size,
             height: size,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
+            child: CustomPaint(
+              size: Size.square(size),
+              painter: TaskoPainter(pose: pose),
+            ),
           ),
         ),
         if (message != null) ...[
@@ -50,6 +52,31 @@ class TaskoMascot extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Side-profile head mark, tinted like Capy Reader's drawer icon.
+class TaskoMark extends StatelessWidget {
+  const TaskoMark({super.key, this.size = 32});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        IconTheme.of(context).color ?? Theme.of(context).colorScheme.onSurface;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        size: Size.square(size),
+        painter: TaskoPainter(
+          pose: TaskoPose.idle,
+          headOnly: true,
+          monochrome: color,
+        ),
+      ),
     );
   }
 }

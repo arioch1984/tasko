@@ -161,13 +161,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
                   children: [
-                    Image.asset(
-                      TaskoPose.idle.assetPath,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.contain,
-                      filterQuality: FilterQuality.high,
-                    ),
+                    const TaskoMark(size: 36),
                     const SizedBox(width: 12),
                     Text(
                       AppConstants.appName,

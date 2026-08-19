@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Tasko the badger mascot is now a flat geometric profile (vector drawing, solid fills, no shading) instead of a 3D render, including the launcher icon and in-app poses
+
 ## [0.3.0] - 2026-08-18
 
 ### Added
