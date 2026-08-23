@@ -1,0 +1,39 @@
+---
+description: Android vs macOS impact, GitHub Releases, and agentic Flutter builds
+alwaysApply: true
+---
+
+# Platforms and builds
+
+Tasko is **one** Flutter app (`lib/`) with two ship targets: Android and macOS. Same `pubspec.yaml` version. Same git tag `vX.Y.Z`.
+
+## Classify impact before editing
+
+| Impact | Touch | In an agentic session |
+|--------|--------|------------------------|
+| Shared | `lib/` (no `Platform.is*`) | `flutter test`. If UI/sync changed, verify **both** targets when you can. |
+| Android-only | `android/`, or Dart behind `Platform.isAndroid` | `flutter test` and `flutter build apk` or `flutter run` on a device/emulator. Do **not** open Xcode or edit `macos/`. |
+| macOS-only | `macos/`, or Dart behind `Platform.isMacOS` | `flutter test` and `flutter build macos` / `flutter run -d macos`. Do **not** touch Gradle, the keystore, or `android/`. |
+
+Changelog `[Unreleased]`: prefix `(Android)` / `(macOS)` when it is platform-specific; no prefix when both.
+
+## GitHub Release (tag `vX.Y.Z`)
+
+CI **always** builds `tasko-X.Y.Z.apk` and `tasko-X.Y.Z-macos.zip` from that commit. Do not path-filter a platform off the release. Do not invent a second semver. "Impacted piece" means what you change and how you verify — not "upload only one binary".
+
+Do not manually attach a single asset because the other platform "did not change".
+
+## Agentic compile (never Chrome / web)
+
+```bash
+flutter devices
+flutter test
+flutter run -d <android-id>    # Android or shared
+flutter run -d macos           # macOS or shared
+flutter build apk --release
+flutter build macos --release  # zip *.app → tasko-X.Y.Z-macos.zip
+```
+
+PATH/JAVA as in the README. If no macOS device is available, do not fake a run: `flutter build macos` is the minimum. Do not commit `build/`. The iOS-type OAuth client ID is not a GitHub secret.
+
+Prefer `feature/<name>`, `fix/<name>`, `hotfix/<name>` from `develop`. Platform-only work is still that kind of PR — it just touches `android/` or `macos/`.
