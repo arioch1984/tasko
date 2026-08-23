@@ -19,6 +19,8 @@ abstract final class AppConstants {
   /// or paste a default here after the client exists.
   static const String macosGoogleClientId = String.fromEnvironment(
     'TASKO_MACOS_GOOGLE_CLIENT_ID',
+    defaultValue:
+        '504670274514-iqbr5550g5ic5a1kc0kfte6ttl51ql7f.apps.googleusercontent.com',
   );
 
   static String get versionLabel => 'v$version ($buildNumber)';
