@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:tasko/auth/auth_provider.dart';
 import 'package:tasko/core/constants.dart';
 import 'package:tasko/core/dates.dart';
+import 'package:tasko/core/layout.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/mascot/tasko_mascot.dart';
 import 'package:tasko/core/mascot/tasko_pose.dart';
@@ -57,15 +59,194 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void _maybeCloseNav(bool closeOnSelect) {
+    if (closeOnSelect && Navigator.of(context).canPop()) {
+      Navigator.pop(context);
+    }
+  }
+
+  void _openNewTask() {
+    if (_selecting) return;
+    final q = _listId != null ? '?listId=$_listId' : '';
+    context.push('/task/new$q');
+  }
+
+  Widget _navigationPanel({required bool closeOnSelect}) {
     final listsAsync = ref.watch(taskListsProvider);
-    final labelsAsync = ref.watch(labelsProvider);
-    final sortMode = ref.watch(sortModeProvider);
-    final labelFilter = ref.watch(selectedLabelFilterProvider);
     final themePreference = ref.watch(themePreferenceProvider);
     final todayLayout = ref.watch(todayLayoutProvider);
     final splitToday = todayLayout == TodayLayout.split;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Row(
+            children: [
+              const TaskoMark(size: 36),
+              const SizedBox(width: 12),
+              Text(
+                AppConstants.appName,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        ListTile(
+          leading: const Icon(Icons.today_rounded),
+          title: const Text(AppStrings.today),
+          selected: _view == HomeView.today,
+          onTap: () {
+            _openView(HomeView.today);
+            _maybeCloseNav(closeOnSelect);
+          },
+        ),
+        if (splitToday)
+          ListTile(
+            leading: const Icon(Icons.event_busy_rounded),
+            title: const Text(AppStrings.overdue),
+            selected: _view == HomeView.overdue,
+            onTap: () {
+              _openView(HomeView.overdue);
+              _maybeCloseNav(closeOnSelect);
+            },
+          ),
+        ListTile(
+          leading: const Icon(Icons.upcoming_rounded),
+          title: const Text(AppStrings.upcoming),
+          selected: _view == HomeView.upcoming,
+          onTap: () {
+            _openView(HomeView.upcoming);
+            _maybeCloseNav(closeOnSelect);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Text(
+            AppStrings.lists,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.6,
+                ),
+          ),
+        ),
+        Expanded(
+          child: listsAsync.when(
+            data: (lists) => ListView.builder(
+              itemCount: lists.length,
+              itemBuilder: (context, index) {
+                final list = lists[index];
+                return ListTile(
+                  leading: const Icon(Icons.list_alt_rounded),
+                  title: Text(list.title),
+                  selected: _view == HomeView.list && _listId == list.id,
+                  onTap: () {
+                    _openView(
+                      HomeView.list,
+                      listId: list.id,
+                      listTitle: list.title,
+                    );
+                    _maybeCloseNav(closeOnSelect);
+                  },
+                );
+              },
+            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(AppStrings.listsError(e)),
+            ),
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.add_box_outlined),
+          title: const Text(AppStrings.newList),
+          onTap: () async {
+            _maybeCloseNav(closeOnSelect);
+            final controller = TextEditingController();
+            final name = await showDialog<String>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text(AppStrings.newList),
+                content: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: AppStrings.listName,
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(AppStrings.cancel),
+                  ),
+                  FilledButton(
+                    onPressed: () =>
+                        Navigator.pop(context, controller.text.trim()),
+                    child: const Text(AppStrings.create),
+                  ),
+                ],
+              ),
+            );
+            if (name == null || name.isEmpty) return;
+            final list =
+                await ref.read(tasksRepositoryProvider).createList(name);
+            ref.invalidate(taskListsProvider);
+            _openView(
+              HomeView.list,
+              listId: list.id,
+              listTitle: list.title,
+            );
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.label_outline_rounded),
+          title: const Text(AppStrings.labels),
+          onTap: () {
+            _maybeCloseNav(closeOnSelect);
+            context.push('/labels');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.settings_outlined),
+          title: const Text(AppStrings.settings),
+          onTap: () {
+            _maybeCloseNav(closeOnSelect);
+            context.push('/settings');
+          },
+        ),
+        ListTile(
+          leading: Icon(themePreference.icon),
+          title: const Text(AppStrings.appearance),
+          subtitle: Text(
+            AppStrings.themePreferenceLabel(themePreference),
+          ),
+          onTap: () async {
+            _maybeCloseNav(closeOnSelect);
+            if (!context.mounted) return;
+            await showAppearanceDialog(context);
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.logout_rounded),
+          title: const Text(AppStrings.signOut),
+          onTap: () {
+            _maybeCloseNav(closeOnSelect);
+            ref.read(authProvider.notifier).signOut();
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final labelsAsync = ref.watch(labelsProvider);
+    final sortMode = ref.watch(sortModeProvider);
+    final labelFilter = ref.watch(selectedLabelFilterProvider);
 
     ref.listen(celebrateTickProvider, (prev, next) {
       if (prev != next && next > 0) {
@@ -101,306 +282,176 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       _ => false,
     };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: [
-          if (_selecting) ...[
-            IconButton(
-              tooltip: AppStrings.reschedule,
-              onPressed: _selected.isEmpty ? null : _rescheduleSelected,
-              icon: const Icon(Icons.event_repeat_rounded),
-            ),
-            IconButton(
-              tooltip: AppStrings.done,
-              onPressed: _clearSelection,
-              icon: const Icon(Icons.close_rounded),
-            ),
-          ] else ...[
-            if (overdueInView)
-              IconButton(
-                tooltip: AppStrings.selectOverdue,
-                onPressed: () => setState(() => _selecting = true),
-                icon: const Icon(Icons.checklist_rounded),
-              ),
-            PopupMenuButton<SortMode>(
-              tooltip: AppStrings.sort,
-              icon: const Icon(Icons.sort_rounded),
-              initialValue: sortMode,
-              onSelected: (mode) {
-                ref.read(sortModeProvider.notifier).state = mode;
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: SortMode.dueDate,
-                  child: Text(AppStrings.dueDate),
+    final wide = useDesktopNav(MediaQuery.sizeOf(context).width);
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyN, meta: true):
+            _openNewTask,
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true):
+            _openNewTask,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(title),
+            actions: [
+              if (_selecting) ...[
+                IconButton(
+                  tooltip: AppStrings.reschedule,
+                  onPressed: _selected.isEmpty ? null : _rescheduleSelected,
+                  icon: const Icon(Icons.event_repeat_rounded),
                 ),
-                PopupMenuItem(
-                  value: SortMode.priority,
-                  child: Text(AppStrings.priority),
+                IconButton(
+                  tooltip: AppStrings.done,
+                  onPressed: _clearSelection,
+                  icon: const Icon(Icons.close_rounded),
                 ),
-                PopupMenuItem(
-                  value: SortMode.title,
-                  child: Text(AppStrings.title),
-                ),
-                PopupMenuItem(
-                  value: SortMode.manual,
-                  child: Text(AppStrings.manual),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Row(
-                  children: [
-                    const TaskoMark(size: 36),
-                    const SizedBox(width: 12),
-                    Text(
-                      AppConstants.appName,
-                      style: Theme.of(context).textTheme.titleLarge,
+              ] else ...[
+                if (overdueInView)
+                  IconButton(
+                    tooltip: AppStrings.selectOverdue,
+                    onPressed: () => setState(() => _selecting = true),
+                    icon: const Icon(Icons.checklist_rounded),
+                  ),
+                PopupMenuButton<SortMode>(
+                  tooltip: AppStrings.sort,
+                  icon: const Icon(Icons.sort_rounded),
+                  initialValue: sortMode,
+                  onSelected: (mode) {
+                    ref.read(sortModeProvider.notifier).state = mode;
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: SortMode.dueDate,
+                      child: Text(AppStrings.dueDate),
+                    ),
+                    PopupMenuItem(
+                      value: SortMode.priority,
+                      child: Text(AppStrings.priority),
+                    ),
+                    PopupMenuItem(
+                      value: SortMode.title,
+                      child: Text(AppStrings.title),
+                    ),
+                    PopupMenuItem(
+                      value: SortMode.manual,
+                      child: Text(AppStrings.manual),
                     ),
                   ],
                 ),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.today_rounded),
-                title: const Text(AppStrings.today),
-                selected: _view == HomeView.today,
-                onTap: () {
-                  _openView(HomeView.today);
-                  Navigator.pop(context);
-                },
-              ),
-              if (splitToday)
-                ListTile(
-                  leading: const Icon(Icons.event_busy_rounded),
-                  title: const Text(AppStrings.overdue),
-                  selected: _view == HomeView.overdue,
-                  onTap: () {
-                    _openView(HomeView.overdue);
-                    Navigator.pop(context);
-                  },
+              ],
+            ],
+          ),
+          drawer: wide
+              ? null
+              : Drawer(
+                  child: SafeArea(
+                    child: _navigationPanel(closeOnSelect: true),
+                  ),
                 ),
-              ListTile(
-                leading: const Icon(Icons.upcoming_rounded),
-                title: const Text(AppStrings.upcoming),
-                selected: _view == HomeView.upcoming,
-                onTap: () {
-                  _openView(HomeView.upcoming);
-                  Navigator.pop(context);
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text(
-                  AppStrings.lists,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.6,
-                      ),
+          floatingActionButton: _selecting
+              ? null
+              : FloatingActionButton(
+                  tooltip: AppStrings.newTask,
+                  onPressed: _openNewTask,
+                  child: const Icon(Icons.add_rounded),
                 ),
-              ),
+          body: Row(
+            children: [
+              if (wide) ...[
+                SizedBox(
+                  width: 280,
+                  child: Material(
+                    color: Theme.of(context).colorScheme.surface,
+                    child: SafeArea(
+                      child: _navigationPanel(closeOnSelect: false),
+                    ),
+                  ),
+                ),
+                const VerticalDivider(width: 1),
+              ],
               Expanded(
-                child: listsAsync.when(
-                  data: (lists) => ListView.builder(
-                    itemCount: lists.length,
-                    itemBuilder: (context, index) {
-                      final list = lists[index];
-                      return ListTile(
-                        leading: const Icon(Icons.list_alt_rounded),
-                        title: Text(list.title),
-                        selected: _view == HomeView.list && _listId == list.id,
-                        onTap: () {
-                          _openView(
-                            HomeView.list,
-                            listId: list.id,
-                            listTitle: list.title,
-                          );
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(AppStrings.listsError(e)),
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.add_box_outlined),
-                title: const Text(AppStrings.newList),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final controller = TextEditingController();
-                  final name = await showDialog<String>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text(AppStrings.newList),
-                      content: TextField(
-                        controller: controller,
-                        autofocus: true,
-                        decoration: const InputDecoration(
-                          labelText: AppStrings.listName,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        labelsAsync.maybeWhen(
+                          data: (labels) {
+                            if (labels.isEmpty) return const SizedBox.shrink();
+                            return SizedBox(
+                              height: 48,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: FilterChip(
+                                      label: const Text(AppStrings.all),
+                                      selected: labelFilter == null,
+                                      onSelected: (_) {
+                                        ref
+                                            .read(selectedLabelFilterProvider
+                                                .notifier)
+                                            .state = null;
+                                      },
+                                    ),
+                                  ),
+                                  ...labels.map(
+                                    (label) => Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: FilterChip(
+                                        avatar: CircleAvatar(
+                                          backgroundColor: label.color,
+                                          radius: 8,
+                                        ),
+                                        label: Text(label.name),
+                                        selected: labelFilter == label.id,
+                                        onSelected: (_) {
+                                          ref
+                                              .read(selectedLabelFilterProvider
+                                                  .notifier)
+                                              .state = label.id;
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          orElse: () => const SizedBox.shrink(),
                         ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(AppStrings.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () =>
-                              Navigator.pop(context, controller.text.trim()),
-                          child: const Text(AppStrings.create),
+                        Expanded(
+                          child: _buildBody(sortMode, labelFilter),
                         ),
                       ],
                     ),
-                  );
-                  if (name == null || name.isEmpty) return;
-                  final list =
-                      await ref.read(tasksRepositoryProvider).createList(name);
-                  ref.invalidate(taskListsProvider);
-                  _openView(
-                    HomeView.list,
-                    listId: list.id,
-                    listTitle: list.title,
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.label_outline_rounded),
-                title: const Text(AppStrings.labels),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/labels');
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings_outlined),
-                title: const Text(AppStrings.settings),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/settings');
-                },
-              ),
-              ListTile(
-                leading: Icon(themePreference.icon),
-                title: const Text(AppStrings.appearance),
-                subtitle: Text(
-                  AppStrings.themePreferenceLabel(themePreference),
+                    if (_showCelebrate)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: ColoredBox(
+                            color: Theme.of(context)
+                                .scaffoldBackgroundColor
+                                .withValues(alpha: 0.55),
+                            child: const Center(
+                              child: TaskoMascot(
+                                pose: TaskoPose.celebrate,
+                                size: 180,
+                                message: AppStrings.niceWork,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                onTap: () async {
-                  Navigator.pop(context);
-                  if (!context.mounted) return;
-                  await showAppearanceDialog(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.logout_rounded),
-                title: const Text(AppStrings.signOut),
-                onTap: () {
-                  Navigator.pop(context);
-                  ref.read(authProvider.notifier).signOut();
-                },
               ),
             ],
           ),
         ),
-      ),
-      floatingActionButton: _selecting
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                final q = _listId != null ? '?listId=$_listId' : '';
-                context.push('/task/new$q');
-              },
-              child: const Icon(Icons.add_rounded),
-            ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              labelsAsync.maybeWhen(
-                data: (labels) {
-                  if (labels.isEmpty) return const SizedBox.shrink();
-                  return SizedBox(
-                    height: 48,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: FilterChip(
-                            label: const Text(AppStrings.all),
-                            selected: labelFilter == null,
-                            onSelected: (_) {
-                              ref
-                                  .read(selectedLabelFilterProvider.notifier)
-                                  .state = null;
-                            },
-                          ),
-                        ),
-                        ...labels.map(
-                          (label) => Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              avatar: CircleAvatar(
-                                backgroundColor: label.color,
-                                radius: 8,
-                              ),
-                              label: Text(label.name),
-                              selected: labelFilter == label.id,
-                              onSelected: (_) {
-                                ref
-                                    .read(selectedLabelFilterProvider.notifier)
-                                    .state = label.id;
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                orElse: () => const SizedBox.shrink(),
-              ),
-              Expanded(
-                child: _buildBody(sortMode, labelFilter),
-              ),
-            ],
-          ),
-          if (_showCelebrate)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: ColoredBox(
-                  color: Theme.of(context)
-                      .scaffoldBackgroundColor
-                      .withValues(alpha: 0.55),
-                  child: const Center(
-                    child: TaskoMascot(
-                      pose: TaskoPose.celebrate,
-                      size: 180,
-                      message: AppStrings.niceWork,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }

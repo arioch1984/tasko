@@ -139,6 +139,7 @@ class PrepareReleaseTest(unittest.TestCase):
             text = body_file.read_text(encoding="utf-8")
             self.assertIn("publishes **v0.3.0**", text)
             self.assertIn("tasko-0.3.0.apk", text)
+            self.assertIn("tasko-0.3.0-macos.zip", text)
 
     def test_skip_when_nothing_to_ship(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

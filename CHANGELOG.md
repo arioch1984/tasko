@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- macOS desktop target: same GitHub Release as Android, unsigned zip (`tasko-X.Y.Z-macos.zip`)
+- Wide-window home navigation (persistent side nav) and Cmd/Ctrl+N for a new task
+- Cursor rules for platform impact (shared / Android-only / macOS-only) and agentic builds
+
 ## [0.3.1] - 2026-08-19
 
 ### Changed
