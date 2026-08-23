@@ -21,7 +21,9 @@ def render_notes(body: str) -> str:
         f"{body}\n\n"
         "Install the APK from this release. If a previous Tasko build was signed "
         "with the debug keystore, uninstall it first — Android will not update "
-        "across signing keys.\n"
+        "across signing keys.\n\n"
+        "The macOS zip is unsigned. After unzipping, right-click Tasko.app → Open "
+        "(Gatekeeper). Notarization is not part of this release.\n"
     )
 
 

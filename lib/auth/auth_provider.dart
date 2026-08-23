@@ -77,8 +77,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final googleSignInProvider = Provider<GoogleSignIn>((ref) {
+  final macosClientId = AppConstants.macosGoogleClientId;
+  final onMac = !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
   return GoogleSignIn(
     scopes: const [AppConstants.tasksScope],
+    clientId: onMac && macosClientId.isNotEmpty ? macosClientId : null,
   );
 });
 

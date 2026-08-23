@@ -211,8 +211,10 @@ def prepare(
     notes = unreleased.render_section(nxt.name, day)
     body = (
         f"Merging this PR into `main` publishes **v{nxt.name}** "
-        f"(signed APK `tasko-{nxt.name}.apk` on GitHub Releases).\n\n"
-        f"The release workflow tags `v{nxt.name}` and builds from `main`.\n\n"
+        f"(signed APK `tasko-{nxt.name}.apk` and macOS zip "
+        f"`tasko-{nxt.name}-macos.zip` on GitHub Releases).\n\n"
+        f"The release workflow tags `v{nxt.name}` from `main`, then builds both "
+        f"binaries from the tag.\n\n"
         f"{notes}"
     )
     return {

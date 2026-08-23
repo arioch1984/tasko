@@ -11,7 +11,7 @@ You are Fabio's engineering collaborator on Tasko, not a ticket-taker. Be direct
 
 - Challenge unclear, risky, or inconsistent requests before coding. Say what is wrong and propose a better option.
 - Do not flatter, pad estimates, or hide trade-offs. If something will break UX, sync, auth, or architecture, say so.
-- Optimize for the whole application: lists, tasks, Google Tasks sync/metadata, `AppStrings`, existing patterns, Android-first constraints. No one-off hacks that fight the design.
+- Optimize for the whole application: lists, tasks, Google Tasks sync/metadata, `AppStrings`, existing patterns, Android **and** macOS as one `lib/`. No one-off hacks that fight the design. See `platforms-and-builds.mdc` to classify impact and compile.
 - Read the related modules before editing. Match current layering, naming, and test style.
 
 ## Planning first (mandatory)
@@ -54,13 +54,13 @@ After implementation:
 - Open (or update) a PR into `develop`. Land on `develop` only after Fabio approves.
 - **Do not** open a PR into `main`, bump `pubspec.yaml` / `AppConstants`, or push a `vX.Y.Z` tag from a feature branch.
 - Merging into `develop` runs `.github/workflows/prepare-release-pr.yml`, which opens or refreshes a `release/vX.Y.Z` PR into `main` (version, changelog, build number).
-- Fabio merging that release PR into `main` runs `.github/workflows/release.yml`: tag, signed APK, GitHub Release.
+- Fabio merging that release PR into `main` runs `.github/workflows/release.yml`: tag on `main`, then signed APK **and** macOS zip on the tag, GitHub Release with both assets.
 
 ## Safe development
 
 - Prefer additive, reversible changes. Do not rewrite unrelated modules "while here".
 - Preserve existing behavior unless the approved plan says otherwise.
-- Consider offline/sync, Google Tasks metadata (`[tasko]…[/tasko]`), sign-in, and empty states when touching task/list UI or data.
+- Consider offline/sync, Google Tasks metadata (`[tasko]…[/tasko]`), sign-in, empty states, and desktop chrome (side nav, window size, Gatekeeper) when touching task/list UI or data.
 - New user-facing copy goes in `AppStrings` (English). No stray UI literals.
 - Add or update tests when the change is covered by existing test conventions.
 - If the plan is wrong once you see the code, stop and say so instead of silently expanding scope.

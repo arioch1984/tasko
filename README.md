@@ -1,30 +1,43 @@
 # Tasko
 
-Improved Android UI for **Google Tasks**: priority, labels, sorting, and smart views (Today / Upcoming, optional Overdue). Tasks live only on Google Tasks — Tasko is the interface.
+Improved **Google Tasks** UI: priority, labels, sorting, and smart views (Today / Upcoming, optional Overdue). Tasks live only on Google Tasks — Tasko is the interface.
+
+Targets: **Android** and **macOS** (one Flutter `lib/`).
 
 Mascot: **Tasko the badger** (*tasso* + *task*), drawn as a stylized cartoon — bold outlines, flat colors, one teal accent.
 
 Primary language: **English** (docs, UI, changelog). Localization can be added later without rewriting call sites — see `lib/core/l10n/app_strings.dart`.
 
-## Downloads (APK)
+## Downloads
 
-Prebuilt Android APKs are published on **GitHub Releases**:
+Prebuilt binaries are published on **GitHub Releases** (same tag, both files):
 
 - Latest release: <https://github.com/arioch1984/tasko/releases/latest>
 - All versions: <https://github.com/arioch1984/tasko/releases>
 
-Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches a versioned APK (e.g. `tasko-0.2.0.apk`).
+Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches:
 
-Day-to-day PRs merge into `develop`. That opens (or updates) a **Release** PR into `main`. Merging the Release PR tags `vX.Y.Z` and GitHub Actions builds the signed APK. Manual `git tag` still works as a fallback. Install from Releases until another distribution channel is set up.
+- `tasko-X.Y.Z.apk` — signed Android APK
+- `tasko-X.Y.Z-macos.zip` — unsigned `Tasko.app`
+
+Day-to-day PRs merge into `develop`. That opens (or updates) a **Release** PR into `main`. Merging the Release PR tags `vX.Y.Z`. The tag workflow builds both binaries. Manual `git tag` still works as a fallback.
 
 If you previously installed a debug-signed APK, uninstall it before installing a release-signed build — Android will not update across signing keys.
 
-### Build a release APK locally
+### macOS Gatekeeper
+
+The zip is **not notarized**. After unzipping, Control-click `Tasko.app` → **Open** (or System Settings → Privacy & Security → Open Anyway). Notarization can come later; it is not the Mac App Store.
+
+### Build locally
 
 ```bash
 flutter build apk --release
 # output: build/app/outputs/flutter-apk/app-release.apk
 # rename before upload, e.g. tasko-0.2.0.apk
+
+flutter build macos --release
+# output: build/macos/Build/Products/Release/Tasko.app
+ditto -c -k --keepParent build/macos/Build/Products/Release/Tasko.app tasko-0.2.0-macos.zip
 ```
 
 For a locally signed release APK (same key as CI), add `android/key.properties` (gitignored):
@@ -38,13 +51,23 @@ storeFile=/path/to/tasko-release.jks
 
 Without that file, `flutter build apk --release` still uses the debug keystore.
 
+macOS Google Sign-In needs the iOS-type OAuth client ID:
+
+```bash
+flutter run -d macos --dart-define=TASKO_MACOS_GOOGLE_CLIENT_ID=YOUR_IOS_CLIENT_ID.apps.googleusercontent.com
+```
+
+CI reads the same value from the repo variable `TASKO_MACOS_GOOGLE_CLIENT_ID` (Settings → Secrets and variables → Actions → Variables). Also add `GIDClientID` and the reversed client ID as a URL scheme in `macos/Runner/Info.plist` (see Google Sign-In for iOS/macOS).
+
 ## Stack
 
-- Flutter (**Android** primary target)
+- Flutter (Android + macOS)
 - Riverpod + go_router
 - Google Sign-In + Google Tasks API v1
 
-Do not use Chrome / web for day-to-day development: `google_sign_in` on web requires a Web OAuth client ID and will assert without it. Use a device or emulator.
+Do not use Chrome / web for day-to-day development: `google_sign_in` on web requires a Web OAuth client ID and will assert without it. Use a device, emulator, or `macos`.
+
+Agents: see `.cursor/rules/platforms-and-builds.mdc` (impact: shared / Android-only / macOS-only), `.cursor/rules/agent-collaboration.mdc`, `.cursor/rules/release-versioning.mdc`.
 
 ## Setup Google Cloud (required)
 
@@ -59,7 +82,18 @@ End users never open Google Cloud — only the app developer does this once.
 
 The Android client ID is **not** pasted into the Dart code. Google matches the app by package name + SHA-1 via Play Services.
 
-Required scope: `https://www.googleapis.com/auth/tasks`
+### macOS: extra OAuth client (iOS type)
+
+Do **not** reuse the Android client. Do not create a "Desktop app" client.
+
+5. Create **OAuth client ID → iOS**:
+   - Bundle ID: `com.tasko.tasko`
+   - App Store ID / Team ID: leave empty
+6. Copy the **Client ID** and the **iOS URL scheme**.
+7. Set repo variable `TASKO_MACOS_GOOGLE_CLIENT_ID` to that client ID (for CI) and pass it locally with `--dart-define`.
+8. In `macos/Runner/Info.plist`, set `GIDClientID` to the client ID and add a `CFBundleURLTypes` entry whose scheme is the iOS URL scheme.
+
+Same project, same Tasks API, same consent screen, same test users. Scope is still `https://www.googleapis.com/auth/tasks`.
 
 ### Optional: Web OAuth client
 
@@ -122,9 +156,10 @@ cd /path/to/Tasko
 flutter pub get
 flutter devices
 flutter run -d emulator-5554   # or your device id — avoid chrome
+flutter run -d macos --dart-define=TASKO_MACOS_GOOGLE_CLIENT_ID=YOUR_IOS_CLIENT_ID.apps.googleusercontent.com
 ```
 
-Add a Google account on the emulator/device before signing in to Tasko.
+Add a Google account on the emulator/device before signing in to Tasko. On macOS, sign-in uses the iOS OAuth client (see above).
 
 ## Versioning & branches
 
@@ -140,7 +175,9 @@ Every commit that lands on `main` must:
 
 1. Bump `version` in `pubspec.yaml` (and `AppConstants.version` / `buildNumber`)
 2. Update [CHANGELOG.md](CHANGELOG.md)
-3. Create an annotated git tag `vX.Y.Z` and push it — GitHub Actions publishes the Release and `tasko-X.Y.Z.apk`
+3. Create an annotated git tag `vX.Y.Z` and push it — GitHub Actions publishes the Release with `tasko-X.Y.Z.apk` and `tasko-X.Y.Z-macos.zip`
+
+The `main` push only creates the tag. The **tag** workflow builds both binaries. Do not skip a platform on the GitHub Release.
 
 See `.cursor/rules/release-versioning.mdc` for the agent checklist.
 
