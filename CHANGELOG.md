@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-24
+
+### Fixed
+
+- GitHub Release APK and macOS zip build in the same `main` workflow run (a tag pushed by Actions cannot start a second workflow)
+
 ## [0.4.0] - 2026-08-23
 
 ### Added
@@ -81,7 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/arioch1984/tasko/releases/tag/v0.4.1
 [0.4.0]: https://github.com/arioch1984/tasko/releases/tag/v0.4.0
 [0.3.1]: https://github.com/arioch1984/tasko/releases/tag/v0.3.1
 [0.3.0]: https://github.com/arioch1984/tasko/releases/tag/v0.3.0
