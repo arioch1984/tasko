@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- GitHub Release APK and macOS zip build in the same `main` workflow run (a tag pushed by Actions cannot start a second workflow)
+
 ## [0.4.0] - 2026-08-23
 
 ### Added

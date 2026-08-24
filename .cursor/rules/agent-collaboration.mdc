@@ -54,7 +54,7 @@ After implementation:
 - Open (or update) a PR into `develop`. Land on `develop` only after Fabio approves.
 - **Do not** open a PR into `main`, bump `pubspec.yaml` / `AppConstants`, or push a `vX.Y.Z` tag from a feature branch.
 - Merging into `develop` runs `.github/workflows/prepare-release-pr.yml`, which opens or refreshes a `release/vX.Y.Z` PR into `main` (version, changelog, build number).
-- Fabio merging that release PR into `main` runs `.github/workflows/release.yml`: tag on `main`, then signed APK **and** macOS zip on the tag, GitHub Release with both assets.
+- Fabio merging that release PR into `main` runs `.github/workflows/release.yml`: tag plus signed APK **and** macOS zip in the same run, GitHub Release with both assets.
 
 ## Safe development
 
