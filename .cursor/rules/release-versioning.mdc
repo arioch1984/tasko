@@ -18,7 +18,7 @@ English is the primary language for UI, README, changelog, commits, and release 
 1. Merge a feature/fix PR into `develop`.
 2. `prepare-release-pr.yml` opens or updates `release/vX.Y.Z` → `main` (semver bump from `[Unreleased]`, `pubspec.yaml`, `AppConstants`, changelog).
 3. Fabio merges that PR into `main`.
-4. `release.yml` on `main` creates the annotated tag `vX.Y.Z` (no Flutter build). The tag workflow builds the signed APK **and** the unsigned macOS zip in parallel, then creates the GitHub Release (`tasko-X.Y.Z.apk` and `tasko-X.Y.Z-macos.zip`). Then it merges `main` back into `develop` so versions stay aligned.
+4. `release.yml` on `main` creates the annotated tag `vX.Y.Z`, then **in the same run** builds the signed APK and unsigned macOS zip and creates the GitHub Release (`tasko-X.Y.Z.apk` and `tasko-X.Y.Z-macos.zip`). A tag pushed by `GITHUB_TOKEN` does not start a second workflow. Then it merges `main` back into `develop` so versions stay aligned.
 
 The Actions token must be allowed to open PRs: repo **Settings → Actions → General → Workflow permissions** → Read and write, and **Allow GitHub Actions to create and approve pull requests**.
 
