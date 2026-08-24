@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- (macOS) README: step-by-step how to open the unsigned zip past Gatekeeper
+
 ## [0.4.1] - 2026-08-24
 
 ### Fixed

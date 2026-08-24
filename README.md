@@ -18,15 +18,26 @@ Prebuilt binaries are published on **GitHub Releases** (same tag, both files):
 Each release is tagged (`vX.Y.Z`), lists changes in [CHANGELOG.md](CHANGELOG.md), and attaches:
 
 - `tasko-X.Y.Z.apk` — signed Android APK
-- `tasko-X.Y.Z-macos.zip` — unsigned `Tasko.app`
+- `tasko-X.Y.Z-macos.zip` — unsigned `Tasko.app` — **do not double-click the app**; follow [Open on macOS](#open-on-macos) below
 
-Day-to-day PRs merge into `develop`. That opens (or updates) a **Release** PR into `main`. Merging the Release PR tags `vX.Y.Z`. The tag workflow builds both binaries. Manual `git tag` still works as a fallback.
+### Open on macOS
+
+The GitHub zip is **not notarized**. macOS Gatekeeper **blocks a normal double-click** (“app can’t be opened because it is from an unidentified developer”). This is expected. Tasko is not on the Mac App Store.
+
+1. Download `tasko-X.Y.Z-macos.zip` from the [latest release](https://github.com/arioch1984/tasko/releases/latest).
+2. Unzip it (double-click the zip, or `unzip`). You get **Tasko.app**.
+3. Optionally move `Tasko.app` into **Applications**.
+4. **Control-click** (right-click) `Tasko.app` → **Open** → **Open** again in the confirmation dialog.
+
+After that first override, Tasko opens normally from Applications, Spotlight, or the Dock.
+
+If Control-click is not enough: **System Settings → Privacy & Security**, scroll to the message that Tasko was blocked, then **Open Anyway**.
+
+On first launch, sign in with Google. Notarization can come later.
+
+Day-to-day PRs merge into `develop`. That opens (or updates) a **Release** PR into `main`. Merging the Release PR tags `vX.Y.Z` and the same workflow builds both binaries. Manual `git tag` still works as a fallback.
 
 If you previously installed a debug-signed APK, uninstall it before installing a release-signed build — Android will not update across signing keys.
-
-### macOS Gatekeeper
-
-The zip is **not notarized**. After unzipping, Control-click `Tasko.app` → **Open** (or System Settings → Privacy & Security → Open Anyway). Notarization can come later; it is not the Mac App Store.
 
 ### Build locally
 
