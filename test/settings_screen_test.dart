@@ -4,12 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasko/core/constants.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
-import 'package:tasko/core/theme_preference.dart';
 import 'package:tasko/core/today_layout_preference.dart';
-import 'package:tasko/data/api/github_releases_api.dart';
-import 'package:tasko/domain/github_release.dart';
 import 'package:tasko/features/settings/settings_screen.dart';
-import 'package:tasko/features/update/app_update_controller.dart';
+
+import 'support/github_test_fakes.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -24,19 +22,7 @@ void main() {
 
   Widget settings({GithubReleasesClient? github}) {
     return ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(prefs),
-        githubReleasesClientProvider.overrideWithValue(
-          github ??
-              _FixedGithubClient(
-                GithubRelease(
-                  version: AppConstants.version,
-                  tagName: 'v${AppConstants.version}',
-                  htmlUrl: AppConstants.githubReleasesUrl,
-                ),
-              ),
-        ),
-      ],
+      overrides: taskoTestOverrides(prefs, github: github),
       child: const MaterialApp(home: SettingsScreen()),
     );
   }
@@ -61,13 +47,8 @@ void main() {
       (tester) async {
     await tester.pumpWidget(
       settings(
-        github: _FixedGithubClient(
-          const GithubRelease(
-            version: '9.9.9',
-            tagName: 'v9.9.9',
-            htmlUrl: 'https://github.com/arioch1984/tasko/releases/tag/v9.9.9',
-            notes: 'Next',
-          ),
+        github: ScriptedGithubReleasesClient(
+          newerThanInstalledRelease(notes: 'Next'),
         ),
       ),
     );
@@ -88,13 +69,4 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text(AppStrings.updateAvailable), findsNothing);
   });
-}
-
-class _FixedGithubClient implements GithubReleasesClient {
-  _FixedGithubClient(this.release);
-
-  final GithubRelease release;
-
-  @override
-  Future<GithubRelease> fetchLatest() async => release;
 }

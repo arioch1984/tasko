@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tasko/core/constants.dart';
 import 'package:tasko/core/semver.dart';
 
 void main() {
@@ -21,5 +22,10 @@ void main() {
     expect(Semver.tryParse('1.0.0')!.isNewerThan(current), isTrue);
     expect(Semver.tryParse('0.4.2')!.isNewerThan(current), isFalse);
     expect(Semver.tryParse('0.4.1')!.isNewerThan(current), isFalse);
+  });
+
+  test('update-dialog fixture stays newer than the shipped app version', () {
+    final shipped = Semver.tryParse(AppConstants.version)!;
+    expect(Semver.tryParse('99.0.0')!.isNewerThan(shipped), isTrue);
   });
 }
