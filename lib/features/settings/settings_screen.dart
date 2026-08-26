@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tasko/core/constants.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/reschedule_shortcuts_preference.dart';
 import 'package:tasko/core/today_layout_preference.dart';
 import 'package:tasko/domain/reschedule_shortcut.dart';
 import 'package:tasko/features/settings/appearance_dialog.dart';
+import 'package:tasko/features/update/app_update_controller.dart';
+import 'package:tasko/features/update/present_update_check.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -24,6 +27,19 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text(AppStrings.appearance),
             onTap: () => showAppearanceDialog(context),
           ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              AppStrings.about,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.info_outline_rounded),
+            title: Text(AppConstants.versionLabel),
+          ),
+          const _CheckForUpdatesTile(),
           const Divider(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -107,6 +123,42 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CheckForUpdatesTile extends ConsumerStatefulWidget {
+  const _CheckForUpdatesTile();
+
+  @override
+  ConsumerState<_CheckForUpdatesTile> createState() =>
+      _CheckForUpdatesTileState();
+}
+
+class _CheckForUpdatesTileState extends ConsumerState<_CheckForUpdatesTile> {
+  bool _checking = false;
+
+  Future<void> _check() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    try {
+      final outcome =
+          await ref.read(appUpdateControllerProvider).manualCheck();
+      if (!mounted) return;
+      await presentUpdateCheckOutcome(context, ref, outcome, manual: true);
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.system_update_alt_rounded),
+      title: const Text(AppStrings.checkForUpdates),
+      subtitle: _checking ? const Text(AppStrings.checkingForUpdates) : null,
+      enabled: !_checking,
+      onTap: _check,
     );
   }
 }

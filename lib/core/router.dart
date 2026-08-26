@@ -7,14 +7,15 @@ import 'package:tasko/features/home/home_shell.dart';
 import 'package:tasko/features/labels/labels_screen.dart';
 import 'package:tasko/features/settings/settings_screen.dart';
 import 'package:tasko/features/tasks/task_detail_screen.dart';
+import 'package:tasko/features/update/update_check_host.dart';
 
-final _rootKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authProvider);
 
   return GoRouter(
-    navigatorKey: _rootKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: _AuthRefresh(ref),
     redirect: (context, state) {
@@ -25,37 +26,44 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/sign-in',
-        builder: (context, state) => const SignInScreen(),
-      ),
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomeShell(),
-      ),
-      GoRoute(
-        path: '/labels',
-        builder: (context, state) => const LabelsScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/task/:listId/:taskId',
-        builder: (context, state) {
-          return TaskDetailScreen(
-            listId: state.pathParameters['listId']!,
-            taskId: state.pathParameters['taskId'],
-          );
+      ShellRoute(
+        builder: (context, state, child) {
+          return UpdateCheckHost(child: child);
         },
-      ),
-      GoRoute(
-        path: '/task/new',
-        builder: (context, state) {
-          final listId = state.uri.queryParameters['listId'];
-          return TaskDetailScreen(listId: listId, taskId: null);
-        },
+        routes: [
+          GoRoute(
+            path: '/sign-in',
+            builder: (context, state) => const SignInScreen(),
+          ),
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const HomeShell(),
+          ),
+          GoRoute(
+            path: '/labels',
+            builder: (context, state) => const LabelsScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/task/:listId/:taskId',
+            builder: (context, state) {
+              return TaskDetailScreen(
+                listId: state.pathParameters['listId']!,
+                taskId: state.pathParameters['taskId'],
+              );
+            },
+          ),
+          GoRoute(
+            path: '/task/new',
+            builder: (context, state) {
+              final listId = state.uri.queryParameters['listId'];
+              return TaskDetailScreen(listId: listId, taskId: null);
+            },
+          ),
+        ],
       ),
     ],
   );

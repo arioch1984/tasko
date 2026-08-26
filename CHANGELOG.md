@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Task detail: open the task in Google Tasks to set a reminder time (Google Calendar can use that time; Tasko cannot read it back)
+- In-app GitHub Release check: offer an update when a newer version is published, plus a Settings action
+
 ## [0.4.2] - 2026-08-24
 
 ### Changed

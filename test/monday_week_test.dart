@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tasko/app.dart';
 import 'package:tasko/core/monday_material_localizations.dart';
-import 'package:tasko/core/theme_preference.dart';
+
+import 'support/github_test_fakes.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,9 +17,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: taskoTestOverrides(prefs),
         child: const TaskoApp(),
       ),
     );

@@ -12,6 +12,14 @@ abstract final class AppConstants {
   static const String metaListTitle = '__Tasko';
   static const String metaConfigTaskTitle = 'Tasko Config';
   static const String packageName = 'com.tasko.tasko';
+  static const String githubOwner = 'arioch1984';
+  static const String githubRepo = 'tasko';
+
+  static String get githubLatestReleaseApiUrl =>
+      'https://api.github.com/repos/$githubOwner/$githubRepo/releases/latest';
+
+  static String get githubReleasesUrl =>
+      'https://github.com/$githubOwner/$githubRepo/releases';
 
   /// iOS-type OAuth client ID for macOS Google Sign-In (public, not a secret).
   /// Create in GCP: Credentials → OAuth client ID → iOS, bundle ID [packageName].
