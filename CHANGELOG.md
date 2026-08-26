@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Startup no longer rebuilds navigation when Google Sign-In finishes restoring, so the in-app update prompt can still appear
+
 ## [0.5.0] - 2026-08-26
 
 ### Added

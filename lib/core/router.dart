@@ -12,14 +12,12 @@ import 'package:tasko/features/update/update_check_host.dart';
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authProvider);
-
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: _AuthRefresh(ref),
     redirect: (context, state) {
-      final signedIn = auth.isSignedIn;
+      final signedIn = ref.read(authProvider).isSignedIn;
       final onSignIn = state.matchedLocation == '/sign-in';
       if (!signedIn && !onSignIn) return '/sign-in';
       if (signedIn && onSignIn) return '/';
