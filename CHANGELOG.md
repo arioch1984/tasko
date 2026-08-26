@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-08-26
+
 ### Fixed
 
 - Startup no longer rebuilds navigation when Google Sign-In finishes restoring, so the in-app update prompt can still appear
@@ -104,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/arioch1984/tasko/releases/tag/v0.5.2
 [0.5.0]: https://github.com/arioch1984/tasko/releases/tag/v0.5.0
 [0.4.2]: https://github.com/arioch1984/tasko/releases/tag/v0.4.2
 [0.4.1]: https://github.com/arioch1984/tasko/releases/tag/v0.4.1
