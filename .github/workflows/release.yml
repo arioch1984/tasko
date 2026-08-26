@@ -40,11 +40,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin --tags
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
+          if git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on origin; continuing."
+          elif git rev-parse "$TAG" >/dev/null 2>&1; then
             git push origin "$TAG" || true
           else
             git tag -a "$TAG" -m "Release $TAG"
-            git push origin "$TAG"
+            # GitHub may create the tag ref while the pack is received, then
+            # reject the same update as "reference already exists" (v0.5.1).
+            # The tag is on origin in that case; do not fail the whole release.
+            if ! git push origin "$TAG"; then
+              git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null
+            fi
           fi
 
   sync-develop:
