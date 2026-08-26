@@ -6,6 +6,7 @@ import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/reschedule_shortcuts_preference.dart';
 import 'package:tasko/data/providers.dart';
 import 'package:tasko/domain/models.dart';
+import 'package:tasko/features/tasks/open_in_google_tasks_tile.dart';
 
 class TaskDetailScreen extends ConsumerStatefulWidget {
   const TaskDetailScreen({
@@ -240,6 +241,10 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                         ),
                     ],
                   ),
+                ],
+                if (_existing?.webViewLink != null) ...[
+                  const SizedBox(height: 8),
+                  OpenInGoogleTasksTile(webViewLink: _existing!.webViewLink!),
                 ],
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(

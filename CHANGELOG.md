@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-26
+
+### Added
+
+- Task detail: open the task in Google Tasks to set a reminder time (Google Calendar can use that time; Tasko cannot read it back)
+- In-app GitHub Release check: offer an update when a newer version is published, plus a Settings action
+
 ## [0.4.2] - 2026-08-24
 
 ### Changed
@@ -93,7 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Versioning policy: every `main` release bumps version, updates this changelog, and gets a git tag
 - APK distribution via GitHub Releases (see README Downloads)
 
-[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/arioch1984/tasko/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/arioch1984/tasko/releases/tag/v0.5.0
 [0.4.2]: https://github.com/arioch1984/tasko/releases/tag/v0.4.2
 [0.4.1]: https://github.com/arioch1984/tasko/releases/tag/v0.4.1
 [0.4.0]: https://github.com/arioch1984/tasko/releases/tag/v0.4.0

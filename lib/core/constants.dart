@@ -3,15 +3,23 @@ abstract final class AppConstants {
   static const String appName = 'Tasko';
 
   /// Keep in sync with `pubspec.yaml` `version:` (before `+`).
-  static const String version = '0.4.2';
+  static const String version = '0.5.0';
 
   /// Keep in sync with `pubspec.yaml` build number (after `+`).
-  static const int buildNumber = 9;
+  static const int buildNumber = 10;
   static const String tasksScope = 'https://www.googleapis.com/auth/tasks';
   static const String tasksBaseUrl = 'https://tasks.googleapis.com/tasks/v1';
   static const String metaListTitle = '__Tasko';
   static const String metaConfigTaskTitle = 'Tasko Config';
   static const String packageName = 'com.tasko.tasko';
+  static const String githubOwner = 'arioch1984';
+  static const String githubRepo = 'tasko';
+
+  static String get githubLatestReleaseApiUrl =>
+      'https://api.github.com/repos/$githubOwner/$githubRepo/releases/latest';
+
+  static String get githubReleasesUrl =>
+      'https://github.com/$githubOwner/$githubRepo/releases';
 
   /// iOS-type OAuth client ID for macOS Google Sign-In (public, not a secret).
   /// Create in GCP: Credentials → OAuth client ID → iOS, bundle ID [packageName].
