@@ -22,36 +22,7 @@ class TasksRepository {
   }
 
   TaskItem _mapTask(Map<String, dynamic> json, String listId) {
-    final decoded = TaskoMetadataCodec.decode(json['notes'] as String?);
-    DateTime? due;
-    final dueRaw = json['due'] as String?;
-    if (dueRaw != null) {
-      due = DateTime.tryParse(dueRaw)?.toLocal();
-      if (due != null) {
-        due = DateTime(due.year, due.month, due.day);
-      }
-    }
-    DateTime? updated;
-    final updatedRaw = json['updated'] as String?;
-    if (updatedRaw != null) {
-      updated = DateTime.tryParse(updatedRaw)?.toLocal();
-    }
-
-    return TaskItem(
-      id: json['id'] as String,
-      listId: listId,
-      title: json['title'] as String? ?? '',
-      notes: decoded.notes,
-      dueDate: due,
-      status: json['status'] == 'completed'
-          ? TaskStatus.completed
-          : TaskStatus.needsAction,
-      parentId: json['parent'] as String?,
-      position: json['position'] as String? ?? '',
-      priority: decoded.priority,
-      labelIds: decoded.labelIds,
-      updated: updated,
-    );
+    return taskItemFromGoogleJson(json, listId);
   }
 
   Map<String, dynamic> _taskBody(TaskItem task) {
@@ -231,4 +202,41 @@ class TasksRepository {
       colorValue: color.toARGB32(),
     );
   }
+}
+
+TaskItem taskItemFromGoogleJson(Map<String, dynamic> json, String listId) {
+  final decoded = TaskoMetadataCodec.decode(json['notes'] as String?);
+  DateTime? due;
+  final dueRaw = json['due'] as String?;
+  if (dueRaw != null) {
+    due = DateTime.tryParse(dueRaw)?.toLocal();
+    if (due != null) {
+      due = DateTime(due.year, due.month, due.day);
+    }
+  }
+  DateTime? updated;
+  final updatedRaw = json['updated'] as String?;
+  if (updatedRaw != null) {
+    updated = DateTime.tryParse(updatedRaw)?.toLocal();
+  }
+  final webViewLink = json['webViewLink'] as String?;
+
+  return TaskItem(
+    id: json['id'] as String,
+    listId: listId,
+    title: json['title'] as String? ?? '',
+    notes: decoded.notes,
+    dueDate: due,
+    status: json['status'] == 'completed'
+        ? TaskStatus.completed
+        : TaskStatus.needsAction,
+    parentId: json['parent'] as String?,
+    position: json['position'] as String? ?? '',
+    priority: decoded.priority,
+    labelIds: decoded.labelIds,
+    updated: updated,
+    webViewLink: (webViewLink == null || webViewLink.isEmpty)
+        ? null
+        : webViewLink,
+  );
 }

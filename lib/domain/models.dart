@@ -64,6 +64,7 @@ class TaskItem extends Equatable {
     this.priority = 4,
     this.labelIds = const [],
     this.updated,
+    this.webViewLink,
   });
 
   final String id;
@@ -77,6 +78,9 @@ class TaskItem extends Equatable {
   final int priority;
   final List<String> labelIds;
   final DateTime? updated;
+
+  /// Google Tasks web UI link (output-only). Used to set reminder time.
+  final String? webViewLink;
 
   bool get isCompleted => status == TaskStatus.completed;
   bool get isSubtask => parentId != null;
@@ -94,6 +98,7 @@ class TaskItem extends Equatable {
     int? priority,
     List<String>? labelIds,
     DateTime? updated,
+    String? webViewLink,
   }) {
     return TaskItem(
       id: id ?? this.id,
@@ -107,6 +112,7 @@ class TaskItem extends Equatable {
       priority: priority ?? this.priority,
       labelIds: labelIds ?? this.labelIds,
       updated: updated ?? this.updated,
+      webViewLink: webViewLink ?? this.webViewLink,
     );
   }
 
@@ -123,5 +129,6 @@ class TaskItem extends Equatable {
         priority,
         labelIds,
         updated,
+        webViewLink,
       ];
 }

@@ -121,6 +121,26 @@ class AppStrings {
   static const metadataFootnote =
       'Priority and labels are stored in Google Tasks notes '
       'inside a Tasko block that stays hidden in this app.';
+  static const setTimeInGoogleTasks = 'Set time in Google Tasks';
+  static const setTimeInGoogleTasksHint =
+      'Opens this task in Google Tasks so you can set a reminder time. '
+      'Google Calendar can use that time; Tasko cannot read it back.';
+  static const openLinkFailed = 'Could not open the link.';
+
+  // Updates
+  static const about = 'About';
+  static const checkForUpdates = 'Check for updates';
+  static const checkingForUpdates = 'Checking for updates…';
+  static const upToDate = "You're on the latest version.";
+  static const updateCheckFailed =
+      'Could not check for updates. Try again later.';
+  static const updateAvailable = 'Update available';
+  static const downloadUpdate = 'Download';
+  static const later = 'Later';
+  static const skipThisVersion = 'Skip this version';
+
+  static String updateAvailableBody(String latest, String current) =>
+      'Tasko $latest is available. You have $current.';
 
   // Labels screen
   static const noLabelsTapPlus = 'No labels yet. Tap + to create one.';
