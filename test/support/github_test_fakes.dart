@@ -6,6 +6,8 @@ import 'package:tasko/data/api/github_releases_api.dart';
 import 'package:tasko/domain/github_release.dart';
 import 'package:tasko/features/update/app_update_controller.dart';
 
+export 'package:tasko/data/api/github_releases_api.dart' show GithubReleasesClient;
+
 class SilentGithubReleasesClient implements GithubReleasesClient {
   const SilentGithubReleasesClient();
 
@@ -26,6 +28,17 @@ class ScriptedGithubReleasesClient implements GithubReleasesClient {
 
   @override
   Future<GithubRelease> fetchLatest() async => release;
+}
+
+/// Always newer than [AppConstants.version], so update-dialog tests survive
+/// a release bump (the old `0.5.0` fixture matched v0.5.0 and hid the dialog).
+GithubRelease newerThanInstalledRelease({String notes = 'Fresh build'}) {
+  return GithubRelease(
+    version: '99.0.0',
+    tagName: 'v99.0.0',
+    htmlUrl: 'https://github.com/arioch1984/tasko/releases/tag/v99.0.0',
+    notes: notes,
+  );
 }
 
 List<Override> taskoTestOverrides(

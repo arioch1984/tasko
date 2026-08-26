@@ -6,8 +6,6 @@ import 'package:tasko/app.dart';
 import 'package:tasko/core/l10n/app_strings.dart';
 import 'package:tasko/core/theme.dart';
 import 'package:tasko/core/theme_preference.dart';
-import 'package:tasko/data/api/github_releases_api.dart';
-import 'package:tasko/domain/github_release.dart';
 
 import 'support/github_test_fakes.dart';
 
@@ -121,14 +119,7 @@ void main() {
   testWidgets('prompts when a newer GitHub release exists', (tester) async {
     await tester.pumpWidget(
       app(
-        github: const ScriptedGithubReleasesClient(
-          GithubRelease(
-            version: '0.5.0',
-            tagName: 'v0.5.0',
-            htmlUrl: 'https://github.com/arioch1984/tasko/releases/tag/v0.5.0',
-            notes: 'Fresh build',
-          ),
-        ),
+        github: ScriptedGithubReleasesClient(newerThanInstalledRelease()),
       ),
     );
     await tester.pump();
