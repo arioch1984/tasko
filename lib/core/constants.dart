@@ -3,10 +3,10 @@ abstract final class AppConstants {
   static const String appName = 'Tasko';
 
   /// Keep in sync with `pubspec.yaml` `version:` (before `+`).
-  static const String version = '0.5.0';
+  static const String version = '0.5.1';
 
   /// Keep in sync with `pubspec.yaml` build number (after `+`).
-  static const int buildNumber = 10;
+  static const int buildNumber = 11;
   static const String tasksScope = 'https://www.googleapis.com/auth/tasks';
   static const String tasksBaseUrl = 'https://tasks.googleapis.com/tasks/v1';
   static const String metaListTitle = '__Tasko';
